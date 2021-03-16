@@ -2,7 +2,7 @@
   (:refer-clojure :exclude [+ * /])
   (:require
    ["mathjs" :as mathjs]
-   [rf-cljs.networks.abcd :refer [abcd to-s]]
-   [rf-cljs.math.operations :refer [cos square + hypot norm log10 abs * /]]
-   [rf-cljs.math.complex :refer [complex real]]
-   [rf-cljs.math.matrix :as mat :refer [matrix to-vec apply-axis]]))
+   [rf-cljs.networks.network :as network]
+   [rf-cljs.math.operations :refer [acos cos square + hypot norm log10 abs * /]]
+   [rf-cljs.math.complex :as complex]
+   [rf-cljs.math.matrix :as mat]))

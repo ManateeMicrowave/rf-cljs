@@ -1,5 +1,6 @@
 (ns rf-cljs.math.matrix
   (:require ["mathjs" :as mathjs]
+            [rf-cljs.math.complex :as complex]
             [cljs-bean.core :refer [->js ->clj]]))
 
 (defn matrix [& items]
@@ -11,8 +12,8 @@
 (defn shape [m]
   (->clj (. m size)))
 
-(defn resize [m shape]
-  (. m resize shape))
+(defn reshape [m shape]
+  (. m reshape (->js shape)))
 
 (defn squeeze [m]
   (mathjs/squeeze m))
@@ -34,6 +35,9 @@
 
 (defn dot-pow [x y]
   (mathjs/dotPow x y))
+
+(defn dot-equals [x y]
+  (mathjs/equal x y))
 
 (defn apply-axis [m dim f]
   (mathjs/apply m dim f))
@@ -64,5 +68,13 @@
 
 (defn random [shape & minmax]
   (matrix (apply mathjs/random (->js shape) minmax)))
+
+(defn random-complex [shape]
+  (let [n (reduce * shape)
+        nums (matrix (into [] (take n (repeatedly complex/random))))]
+    (reshape nums shape)))
+
+(defn equals [x y]
+  (mathjs/deepEqual x y))
 
 ;; There are indeed more, but I'm getting bored

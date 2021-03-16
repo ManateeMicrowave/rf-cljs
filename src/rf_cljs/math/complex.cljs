@@ -16,3 +16,7 @@
 
 (defn real [x]
   (mathjs/re x))
+
+(defn random
+  ([] (complex (rand) (rand)))
+  ([max] (complex (rand max) (rand max))))
