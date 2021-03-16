@@ -73,8 +73,14 @@
   (from-s (assoc input :data (to-s input))))
 
 (defn passivity [])
-(defn reciprocity [])
+
+(defn reciprocity [s]
+  (matrix (for [i (range (first (mat/shape s)))
+                :let [s (mat/squeeze (mat/idx s i :all :all))]]
+            (- s (mat/transpose s)))))
 
 (defn passive? [])
+
 (defn active? [s])
+
 (defn reciprocal? [])

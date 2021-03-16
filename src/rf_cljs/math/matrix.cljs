@@ -11,6 +11,12 @@
 (defn shape [m]
   (->clj (. m size)))
 
+(defn resize [m shape]
+  (. m resize shape))
+
+(defn squeeze [m]
+  (mathjs/squeeze m))
+
 (defn idx [m & idxs]
   (let [dims (shape m)
         idxs (for [i (range (count idxs))
@@ -55,5 +61,8 @@
 
 (defn det [m]
   (mathjs/det m))
+
+(defn random [shape & minmax]
+  (matrix (apply mathjs/random (->js shape) minmax)))
 
 ;; There are indeed more, but I'm getting bored
