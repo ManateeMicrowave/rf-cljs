@@ -3,7 +3,6 @@
 
  :dependencies
  [[cljs-bean "1.6.0"]
-  [g7s/algo.generic "0.1.0"]
   [binaryage/devtools "1.0.2"]]
 
  :builds
