@@ -8,11 +8,17 @@
 (defn to-vec [m]
   (->clj (. m toArray)))
 
-(defn idx [m & idxs]
-  (. m subset (apply mathjs/index (map ->js idxs))))
-
 (defn shape [m]
   (->clj (. m size)))
+
+(defn idx [m & idxs]
+  (let [dims (shape m)
+        idxs (for [i (range (count idxs))
+                   :let [ix (nth idxs i)]]
+               (if (=  ix :all)
+                 [0 (dec (nth dims i))]
+                 ix))]
+    (. m subset (apply mathjs/index (map ->js idxs)))))
 
 (defn dot-times [x y]
   (mathjs/dotMultiply x y))
