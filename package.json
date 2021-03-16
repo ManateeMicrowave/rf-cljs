@@ -1,0 +1,18 @@
+{
+  "name": "fast-filter",
+  "dependencies": {
+    "karma": "^6.2.0",
+    "karma-chrome-launcher": "^3.1.0",
+    "karma-cljs-test": "^0.1.0",
+    "karma-firefox-launcher": "^2.1.0",
+    "karma-junit-reporter": "^2.0.1",
+    "karma-spec-reporter": "^0.0.32",
+    "mathjs": "^9.3.0"
+  },
+  "version": "0.1.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "shadow-cljs": "^2.11.20"
+  }
+}
