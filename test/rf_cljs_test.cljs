@@ -18,7 +18,7 @@
             :let [to (network/convert {:from :abcd :to net :data abcd :z0 z0})
                   from (network/convert {:from net :to :abcd :data to :z0 z0})]]
       (testing (str "Roundtrip abcd -> " net " -> abcd")
-        (is (mat/equals abcd from))))))
+        (is (mat/equals abcd from eps))))))
 
 (deftest renomalize
   (let [s (mat/random-complex test-network-size)
