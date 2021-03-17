@@ -15,3 +15,8 @@
             :let [to (network/convert {:from :abcd :to net :data abcd :z0 z0})
                   from (network/convert {:from net :to :abcd :data to :z0 z0})]]
       (is (mat/equals abcd from)))))
+
+(deftest renomalize
+  (let [s (mat/random-complex test-network-size)
+        z75 (network/renormalize s 50 75)]
+    (is (mat/equals s (network/renormalize z75 75 50)))))

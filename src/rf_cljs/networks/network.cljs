@@ -74,6 +74,8 @@
 
 
 ; 2-port parameters
+
+
 (defmethod to-s :abcd [{:keys [data z0]}]
   (let [[nfreqs nportsa nportsb] (mat/shape data)
         z0 (fix-z0-shape z0 nportsa)
@@ -127,7 +129,6 @@
                   [[(/ T12 T22) (/ det-t T22)]
                    [(/ T22) (/ (- T21 T22))]]))))
 
-
 (defmulti from-s :to)
 
 ; N-port parameters
@@ -171,7 +172,7 @@
    `z0-current`, and returns a NxMxM matrix of s-parameters
    referenced to `z0-desired`"
   [s z0-current z0-desired]
-  (to-s {:from :z :data (from-s {:to :z :data s :z0 z0-current}) :z0 z0-desired})) ;TODO add test
+  (to-s {:from :z :data (from-s {:to :z :data s :z0 z0-current}) :z0 z0-desired}))
 
 (defn passivity [])
 
