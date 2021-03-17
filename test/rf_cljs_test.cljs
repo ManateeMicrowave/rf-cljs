@@ -8,7 +8,7 @@
    [rf-cljs.math.matrix :as mat]))
 
 (def networks [:abcd :z :y :s :t :h])
-(def test-network-size [100 2 2])
+(def test-network-size [1 2 2])
 (def eps 0.000001) ; epsilon used for floating point equality comparisons
 
 (deftest round-trip-network
