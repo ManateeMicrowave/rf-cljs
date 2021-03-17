@@ -87,8 +87,10 @@
                                         (* 0.5)))]
                     (* F (- 1 (* G Y)) (mat/inv (+ 1 (* G Y))) (mat/inv F)))))))
 
-(defmethod to-s :s [{:keys [data Z0]}])
+(defmethod to-s :s [{:keys [data Z0]}] data)
+
 (defmethod to-s :t [{:keys [data Z0]}])
+
 (defmethod to-s :h [{:keys [data Z0]}])
 
 (defmulti from-s :to)
