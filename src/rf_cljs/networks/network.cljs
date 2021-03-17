@@ -6,7 +6,6 @@
    [rf-cljs.math.matrix :as mat]
    ["mathjs" :as mathjs]))
 
-(def m (mat/matrix [[[1 2] [3 4]] [[5 6] [7 8]]])) ; Test matrix, delete after no longer needed
 
 ;; (defmulti abcd :type)
 
@@ -93,8 +92,6 @@
 
 
 ; 2-port parameters
-
-
 (defmethod to-s :abcd [{:keys [data z0]}]
   (let [[nfreqs nportsa nportsb] (mat/shape data)
         z0 (fix-z0-shape z0 nportsa)
@@ -108,13 +105,13 @@
                         D (mat/idx data i 1 1)
                         denom (+ (* A z02) B (* C z01 z02) (* D z01))]
                     [[(/ (+ (* A z02) B (* -1 C (cmplx/conjugate z01) z02) (* -1 D (cmplx/conjugate z01)))
-                         denom)
+                         denom) ;S11
                       (/ (* 2 (sqrt (* (cmplx/real z01) (cmplx/real z02))))
-                         denom)]
+                         denom)] ;S12
                      [(/ (* 2 (- (* A D) (* B C)) (sqrt (* (cmplx/real z01) (cmplx/real z02))))
-                         denom)
+                         denom) ;S21
                       (/ (+ (* (- A) (cmplx/conjugate z02)) B (* -1 C z01 (cmplx/conjugate z02)) (* D z01))
-                         denom)]])))))
+                         denom)]]))))) ;S22
 
 (defmethod to-s :h [{:keys [data z0]}]
   (let [[nfreqs nportsa nportsb] (mat/shape data)
@@ -177,7 +174,28 @@
                     (* (mat/inv F)  (mat/inv (+ (* S G) (mat/ctranspose G))) (- (mat/eye nportsa) S) F))))))
 
 ; 2-port parameters
-(defmethod from-s :abcd [{:keys [data z0]}])
+(defmethod from-s :abcd [{:keys [data z0]}]
+  (let [[nfreqs nportsa nportsb] (mat/shape data)
+        z0 (fix-z0-shape z0 nportsa)
+        z01 (mat/idx z0 0)
+        z02 (mat/idx z0 1)]
+    (assert (= nportsa nportsb 2) "ABCD parameters must have two ports")
+    (mat/matrix (for [i (range nfreqs)]
+                  (let [S11 (mat/idx data i 0 0)
+                        S12 (mat/idx data i 0 1)
+                        S21 (mat/idx data i 1 0)
+                        S22 (mat/idx data i 1 1)
+                        denom  (* 2 S21 (sqrt (* (cmplx/real z01) (cmplx/real z02))))]
+                    [[
+                      (/ (+ (* (+ (cmplx/conjugate z01) (* S11 z01)) (- 1 S11)) (* S12 S21 z01)) denom) ; A
+                      (/ (- (* (- 1 S11) (- 1 S22) ) (* S21 S12)) denom) ; B
+                      ]
+                     [
+                      (/ (- (* (+ (cmplx/conjugate z01) (* S11 z01)) (+ (cmplx/conjugate z02) (* S22 z02))) 
+                            (* S12 S21 z01 z02)) denom) ; C 
+                      (/ (+ (* (- 1 S11) (+ (cmplx/conjugate z02) (* S22 z02)) ) (* S12 S21 z02)) denom)
+                     ]])))))
+
 (defmethod from-s :h [{:keys [data z0]}])
 (defmethod from-s :t [{:keys [data z0]}])
 (defn convert [input]
@@ -186,7 +204,7 @@
 (defn renormalize
   "Takes `s` an NxMxM matrix of s-parameters referenced to 
    `z0-current`, and returns a NxMxM matrix of s-parameters
-   referenced to `z0-desired`"
+   referenced to `z0-desired`."
   [s z0-current z0-desired]
   (to-s {:from :z :data (from-s {:to :z :data s :z0 z0-current}) :z0 z0-desired}))
 

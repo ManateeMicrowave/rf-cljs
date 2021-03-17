@@ -9,4 +9,4 @@
  :builds
  {:ci {:target :karma
        :output-to "target/ci.js"
-       :ns-regexp "-spec$"}}}
+       :ns-regexp "-test$"}}}

@@ -1,6 +1,8 @@
 (ns rf-cljs.math.matrix
+  (:refer-clojure :exclude [+ - * / <])
   (:require ["mathjs" :as mathjs]
             [rf-cljs.math.complex :as complex]
+            [rf-cljs.math.operations :refer [abs + - * /]]
             [cljs-bean.core :refer [->js ->clj]]))
 
 (defn matrix [& items]
@@ -126,8 +128,32 @@
   (let [n (reduce * shape)
         nums (matrix (into [] (take n (repeatedly complex/random))))]
     (reshape nums shape)))
+  
+(defn -fill [shape value]
+  (if (= (count shape) 0)
+    value
+    (for [_ (range (first shape))]
+      (-fill (rest shape) value))))
 
-(defn equals [x y]
-  (mathjs/deepEqual x y))
+(defn fill [shape value]
+  (matrix (-fill shape value)))
 
-;; There are indeed more, but I'm getting bored
+(defn equals
+
+  ([x y]
+   (mathjs/deepEqual x y))
+  ([x y eps]
+   (- (abs (- x y)) (+ (zeros (shape x)) eps))))
+
+(defn <
+  ([x] (fill (shape x) true))
+  ([x y] (mathjs/larger x y))
+  ([x y & more]
+   (if (mathjs/larger x y)
+     (if (next more)
+       (recur y (first more) (next more))
+       (mathjs/larger y (first more)))
+     false)))
+
+[ b (+ b 1) (+ b 3)] 
+;; There are indeed more, but I'm getting bored 
