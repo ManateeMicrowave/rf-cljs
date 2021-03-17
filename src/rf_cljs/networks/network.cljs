@@ -51,10 +51,10 @@
     (assert (= m n) "Matrix must be square")
     (assert (= 0 (mod m 2)) "Matrix must be 2nx2n")
     (if (= n 2)
-      [(mat/matrix [(mat/idx data 0 0)])
-       (mat/matrix [(mat/idx data 0 1)])
-       (mat/matrix [(mat/idx data 1 0)])
-       (mat/matrix [(mat/idx data 1 1)])]
+      [(mat/idx data 0 0)
+       (mat/idx data 0 1)
+       (mat/idx data 1 0)
+       (mat/idx data 1 1)]
       [(mat/idx data [0 part-n] [0 part-n])
        (mat/idx data [0 part-n] [(inc part-n) (dec n)])
        (mat/idx data [(inc part-n) (dec n)] [0 part-n])
@@ -142,8 +142,8 @@
     (assert (= nportsa nportsb) "Matrix must be square")
     (for [i (range nfreqs)
           :let [[Tee Tei Tie Tii] (internal-external-partition (mat/squeeze (mat/idx data i :all :all)))]]
-      (mat/block [(mat/matrix [(* Tie (mat/inv Tee))]) (- Tii (* Tie (mat/inv Tee) Tei))]
-                 [(mat/inv Tee) (mat/matrix [(* -1 (mat/inv Tee) Tei)])]))))
+      (mat/matrix [[(* Tie (mat/inv Tee)) (- Tii (* Tie (mat/inv Tee) Tei))]
+                   [(mat/inv Tee) (* -1 (mat/inv Tee) Tei)]]))))
 
 (defmulti from-s :to)
 

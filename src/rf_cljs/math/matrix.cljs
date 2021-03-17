@@ -3,14 +3,18 @@
             [rf-cljs.math.complex :as complex]
             [cljs-bean.core :refer [->js ->clj]]))
 
-(defn matrix [& items]
-  (mathjs/matrix (apply ->js items)))
-
 (defn matrix? [m]
   (= (type m) mathjs/Matrix))
 
-(defn to-vec [m]
-  (->clj (. m toArray)))
+(defn -matrix-type [items]
+  (if (number? (first items))
+    :vec
+    (when (vector? (first items))
+      (if (matrix? (first (first items)))
+        :block
+        :mat))))
+
+(defmulti matrix -matrix-type)
 
 (defn shape [m]
   (->clj (. m size)))
@@ -21,7 +25,19 @@
 (defn zeros [shape]
   (mathjs/zeros (matrix shape)))
 
-(defn block [& items] ; (block [A B R] [C D E]) -> [[A B R] [C D E]]
+(defmethod matrix
+  :mat
+  [items]
+  (mathjs/matrix (->js items)))
+
+(defmethod matrix
+  :vec
+  [items]
+  (mathjs/matrix (->js items)))
+
+(defmethod matrix
+  :block
+  [items]
   (let [block-rows (count items)
         row-heights (for [row items]
                       (first (shape (first row))))]
@@ -31,12 +47,12 @@
             :let [n-rows (first (shape block))]]
       (assert (= n-rows (nth row-heights i)) "Blocks in each row must have the same number of rows"))
     (let [total-rows (reduce + row-heights)
-          total-cols (reduce + (for [block (first items)]
-                                 (second (shape block))))
+          total-cols (reduce + (for [blk (first items)]
+                                 (second (shape blk))))
           out-shape [total-rows total-cols]]
       (doseq [row items
-              :let [cols (reduce + (for [block row]
-                                     (second (shape block))))]]
+              :let [cols (reduce + (for [blk row]
+                                     (second (shape blk))))]]
         (assert (= total-cols cols) "Total column size must be consistent"))
       (let [out-mat (zeros out-shape)]
         (doseq [i (range block-rows)
@@ -56,6 +72,9 @@
           (. out-mat subset idxs m))
         out-mat))))
 
+(defn to-vec [m]
+  (->clj (. m toArray)))
+
 (defn squeeze [m]
   (mathjs/squeeze m))
 
@@ -64,7 +83,7 @@
         idxs (for [i (range (count idxs))
                    :let [ix (nth idxs i)]]
                (if (=  ix :all)
-                 [0 (dec (nth dims i))]
+                 (range (nth dims i))
                  ix))]
     (. m subset (apply mathjs/index (map ->js idxs)))))
 
