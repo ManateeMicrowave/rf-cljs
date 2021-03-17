@@ -14,3 +14,9 @@ yarn-error.log*
 .shadow-cljs/
 .clj-kondo/.cache/
 target/
+
+# lisp language server file
+.lsp/ 
+
+# vscode calva output files
+.calva/

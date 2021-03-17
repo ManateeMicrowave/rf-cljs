@@ -6,6 +6,8 @@
    [rf-cljs.math.matrix :as mat]
    ["mathjs" :as mathjs]))
 
+(def m (mat/matrix [[[1 2] [3 4]] [[5 6] [7 8]]])) ; Test matrix, delete after no longer needed
+
 ;; (defmulti abcd :type)
 
 ;; (defmethod abcd :series [{:keys [Z]}]
@@ -22,30 +24,61 @@
 ;;   (matrix [[(+ 1 (/ Yb Yc)) (/ 1 Yc)]
 ;;            [(+ Ya Yb (/ (* Ya Yb) Yc)) (+ 1 (/ Yb Yc))]]))
 
-;; (defmethod abcd :tline [{:keys [Z0 beta l]}]
+;; (defmethod abcd :tline [{:keys [z0 beta l]}]
 ;;   (let [j (mathjs/complex "0+1i")
 ;;         theta (* beta l)]
-;;     (matrix [[(cos theta) (* j Z0 (sin theta))]
-;;              [(/ (* j (sin theta)) Z0) (cos theta)]])))
+;;     (matrix [[(cos theta) (* j z0 (sin theta))]
+;;              [(/ (* j (sin theta)) z0) (cos theta)]])))
 
 ;; (defmethod abcd :transformer [{:keys [N]}]
 ;;   (matrix [[N 0] [0 (/ N)]]))
 
-(defn fix-z0-shape [Z0 nports]
-  (if (or (mat/matrix? Z0)
-          (vector? Z0))
-    (let [Z0 (mat/matrix Z0)]
-      (assert (= [nports] (mat/shape Z0)) "(count Z0) must equal nports")
-      Z0)
-    (* Z0 (mat/ones nports))))
+(defn fix-z0-shape [z0 nports]
+  (if (or (mat/matrix? z0)
+          (vector? z0))
+    (let [z0 (mat/matrix z0)]
+      (assert (= [nports] (mat/shape z0)) "(count z0) must equal nports")
+      z0)
+    (* z0 (mat/ones nports))))
 
 (defmulti to-s :from)
 
-(defmethod to-s :abcd [{:keys [data Z0]}]
+; N-port parameters
+(defmethod to-s :s [{:keys [data z0]}] data)
+
+(defmethod to-s :z [{:keys [data z0]}]
   (let [[nfreqs nportsa nportsb] (mat/shape data)
-        Z0 (fix-z0-shape Z0 nportsa)
-        z01 (mat/idx Z0 0)
-        z02 (mat/idx Z0 1)]
+        z0 (fix-z0-shape z0 nportsa)]
+    (assert (= nportsa nportsb) "Matrix must be square")
+    (mat/matrix (for [i (range nfreqs)
+                      :let [Z (mat/squeeze (mat/idx data i :all :all))]]
+                  (let [G (mat/diag z0)
+                        F (mat/diag (-> (cmplx/real z0)
+                                        abs
+                                        sqrt
+                                        (* 0.5)))]
+                    (* F (- Z (mat/ctranspose G)) (mat/inv (+ Z G)) (mat/inv F))))))) ; F*(Z-G)*(Z+G)^-1*F^-1 = S
+
+(defmethod to-s :y [{:keys [data z0]}]
+  (let [[nfreqs nportsa nportsb] (mat/shape data)
+        z0 (fix-z0-shape z0 nportsa)]
+    (assert (= nportsa nportsb) "Matrix must be square")
+    (mat/matrix (for [i (range nfreqs)
+                      :let [Y (mat/squeeze (mat/idx data i :all :all))]]
+                  (let [G (mat/diag z0)
+                        F (mat/diag (-> (cmplx/real z0)
+                                        abs
+                                        sqrt
+                                        (* 0.5)))]
+                    (* F (- (mat/eye nportsa) (* G Y)) (mat/inv (+ (mat/eye nportsa) (* G Y))) (mat/inv F)))))))
+
+
+; 2-port parameters
+(defmethod to-s :abcd [{:keys [data z0]}]
+  (let [[nfreqs nportsa nportsb] (mat/shape data)
+        z0 (fix-z0-shape z0 nportsa)
+        z01 (mat/idx z0 0)
+        z02 (mat/idx z0 1)]
     (assert (= nportsa nportsb 2) "ABCD parameters must have two ports")
     (mat/matrix (for [i (range nfreqs)]
                   (let [A (mat/idx data i 0 0)
@@ -62,50 +95,11 @@
                       (/ (+ (* (- A) (cmplx/conjugate z02)) B (* -1 C z01 (cmplx/conjugate z02)) (* D z01))
                          denom)]])))))
 
-(defmethod to-s :z [{:keys [data Z0]}]
+(defmethod to-s :h [{:keys [data z0]}]
   (let [[nfreqs nportsa nportsb] (mat/shape data)
-        Z0 (fix-z0-shape Z0 nportsa)]
-    (assert (= nportsa nportsb) "Matrix must be square")
-    (mat/matrix (for [i (range nfreqs)
-                      :let [Z (mat/squeeze (mat/idx data i :all :all))]]
-                  (let [G (mat/diag Z0)
-                        F (mat/diag (-> (cmplx/real Z0)
-                                        abs
-                                        sqrt
-                                        (* 0.5)))]
-                    (* F (- Z (mat/ctranspose G)) (mat/inv (+ Z G)) (mat/inv F)))))))
-
-(defmethod to-s :y [{:keys [data Z0]}]
-  (let [[nfreqs nportsa nportsb] (mat/shape data)
-        Z0 (fix-z0-shape Z0 nportsa)]
-    (assert (= nportsa nportsb) "Matrix must be square")
-    (mat/matrix (for [i (range nfreqs)
-                      :let [Y (mat/squeeze (mat/idx data i :all :all))]]
-                  (let [G (mat/diag Z0)
-                        F (mat/diag (-> (cmplx/real Z0)
-                                        abs
-                                        sqrt
-                                        (* 0.5)))]
-                    (* F (- 1 (* G Y)) (mat/inv (+ 1 (* G Y))) (mat/inv F)))))))
-
-(defmethod to-s :s [{:keys [data Z0]}] data)
-
-(defmethod to-s :t [{:keys [data Z0]}]
-  (let [[nfreqs nportsa nportsb] (mat/shape data)]
-    (assert (= nportsa nportsb 2) "T parameters must have two ports")
-    (mat/matrix (for [i (range nfreqs)
-                      :let [T12 (mat/idx data i 0 1)
-                            T21 (mat/idx data i 1 0)
-                            T22 (mat/idx data i 1 1)
-                            det-t (mat/det (mat/squeeze (mat/idx data i :all :all)))]]
-                  [[(/ T12 T22) (/ det-t T22)]
-                   [(/ T22) (/ (- T21 T22))]]))))
-
-(defmethod to-s :h [{:keys [data Z0]}]
-  (let [[nfreqs nportsa nportsb] (mat/shape data)
-        Z0 (fix-z0-shape Z0 nportsa)
-        z01 (mat/idx Z0 0)
-        z02 (mat/idx Z0 1)]
+        z0 (fix-z0-shape z0 nportsa)
+        z01 (mat/idx z0 0)
+        z02 (mat/idx z0 1)]
     (assert (= nportsa nportsb 2) "H parameters must have two ports")
     (mat/matrix (for [i (range nfreqs)]
                   (let [h11 (mat/idx data i 0 0)
@@ -122,17 +116,62 @@
                       (/ (+ (* (+ z01 h11) (- 1 (* h22 (cmplx/conjugate z02)))) (* h12 h21 (cmplx/conjugate z02)))
                          denom)]])))))
 
+(defmethod to-s :t [{:keys [data z0]}]
+  (let [[nfreqs nportsa nportsb] (mat/shape data)]
+    (assert (= nportsa nportsb 2) "T parameters must have two ports")
+    (mat/matrix (for [i (range nfreqs)
+                      :let [T12 (mat/idx data i 0 1)
+                            T21 (mat/idx data i 1 0)
+                            T22 (mat/idx data i 1 1)
+                            det-t (mat/det (mat/squeeze (mat/idx data i :all :all)))]]
+                  [[(/ T12 T22) (/ det-t T22)]
+                   [(/ T22) (/ (- T21 T22))]]))))
+
+
 (defmulti from-s :to)
 
-(defmethod from-s :abcd [{:keys [data Z0]}])
-(defmethod from-s :h [{:keys [data Z0]}])
-(defmethod from-s :s [{:keys [data Z0]}] data)
-(defmethod from-s :t [{:keys [data Z0]}])
-(defmethod from-s :y [{:keys [data Z0]}])
-(defmethod from-s :z [{:keys [data Z0]}])
+; N-port parameters
+(defmethod from-s :s [{:keys [data z0]}] data)
 
+(defmethod from-s :z [{:keys [data z0]}]
+  (let [[nfreqs nportsa nportsb] (mat/shape data)
+        z0 (fix-z0-shape z0 nportsa)]
+    (assert (= nportsa nportsb) "Matrix must be square")
+    (mat/matrix (for [i (range nfreqs)
+                      :let [S (mat/squeeze (mat/idx data i :all :all))]]
+                  (let [G (mat/diag z0)
+                        F (mat/diag (-> (cmplx/real z0)
+                                        abs
+                                        sqrt
+                                        (* 0.5)))]
+                    (* (mat/inv F) (mat/inv (- (mat/eye nportsa) S)) (+ (* S G) (mat/ctranspose G)) F))))))
+
+(defmethod from-s :y [{:keys [data z0]}]
+  (let [[nfreqs nportsa nportsb] (mat/shape data)
+        z0 (fix-z0-shape z0 nportsa)]
+    (assert (= nportsa nportsb) "Matrix must be square")
+    (mat/matrix (for [i (range nfreqs)
+                      :let [S (mat/squeeze (mat/idx data i :all :all))]]
+                  (let [G (mat/diag z0)
+                        F (mat/diag (-> (cmplx/real z0)
+                                        abs
+                                        sqrt
+                                        (* 0.5)))]
+                    (* (mat/inv F)  (mat/inv (+ (* S G) (mat/ctranspose G))) (- (mat/eye nportsa) S) F))))))
+
+; 2-port parameters
+(defmethod from-s :abcd [{:keys [data z0]}])
+(defmethod from-s :h [{:keys [data z0]}])
+(defmethod from-s :t [{:keys [data z0]}])
 (defn convert [input]
   (from-s (assoc input :data (to-s input))))
+
+(defn renormalize
+  "Takes `s` an NxMxM matrix of s-parameters referenced to 
+   `z0-current`, and returns a NxMxM matrix of s-parameters
+   referenced to `z0-desired`"
+  [s z0-current z0-desired]
+  (to-s {:from :z :data (from-s {:to :z :data s :z0 z0-current}) :z0 z0-desired})) ;TODO add test
 
 (defn passivity [])
 

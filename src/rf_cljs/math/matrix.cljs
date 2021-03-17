@@ -78,6 +78,9 @@
 (defn inv [m]
   (mathjs/inv m))
 
+(defn eye [shape]
+  (mathjs/identity (->js shape)))
+
 (defn random [shape & minmax]
   (matrix (apply mathjs/random (->js shape) minmax)))
 
