@@ -32,6 +32,7 @@
 ;; (defmethod abcd :transformer [{:keys [N]}]
 ;;   (matrix [[N 0] [0 (/ N)]]))
 
+
 (defn fix-z0-shape [z0 nports]
   (if (or (mat/matrix? z0)
           (vector? z0))
@@ -137,10 +138,9 @@
   (let [[nfreqs nportsa nportsb] (mat/shape data)]
     (assert (= nportsa nportsb) "Matrix must be square")
     (mat/matrix (for [i (range nfreqs)
-                      :let [[Tee Tei Tie Tii] (internal-external-partition (mat/squeeze (mat/idx data i :all :all)))]]
-                  (mat/matrix [[(* Tie (mat/inv Tee)) (- Tii (* Tie (mat/inv Tee) Tei))]
-                               [(mat/inv Tee) (* -1 (mat/inv Tee) Tei)]])))))
-
+                      :let [[T11 T12 T21 T22] (internal-external-partition (mat/squeeze (mat/idx data i :all :all)))]]
+                  (mat/matrix [[(* T12 (mat/inv T22)) (- T11 (* T12 (mat/inv T22) T21))]
+                               [(mat/inv T22) (* -1 (mat/inv T22) T21)]])))))
 
 (defmulti from-s :to)
 
@@ -188,7 +188,7 @@
                         denom  (* 2 S21 (sqrt (* (cmplx/real z01) (cmplx/real z02))))]
                     [[(/ (+ (* (+ (cmplx/conjugate z01) (* S11 z01)) (- 1 S22)) (* S12 S21 z01)) denom) ; A
                       (/ (- (* (+ (cmplx/conjugate z01) (* S11 z01)) (+ (cmplx/conjugate z02) (* S22 z02)))
-                            (* S12 S21 z01 z02)) denom) ; B 
+                            (* S12 S21 z01 z02)) denom) ; B
                       ]
                      [(/ (- (* (- 1 S11) (- 1 S22)) (* S21 S12)) denom) ; C
                       (/ (+ (* (- 1 S11) (+ (cmplx/conjugate z02) (* S22 z02))) (* S12 S21 z02)) denom) ; D
@@ -214,15 +214,6 @@
                          denom)
                       (/ (- (* (- 1 s11) (- 1 s22)) (* s12 s21))
                          denom)]])))))
-                    ;; [[(/ (- (* (- h11 (cmplx/conjugate z01)) (+ 1 (* h22 z02))) (* h12 h21 z02))
-                    ;;      denom)
-                    ;;   (/ (* 2 h12 (sqrt (* (cmplx/real z01) (cmplx/real z02))))
-                    ;;      denom)]
-                    ;;  [(/ (* -2 h21 (sqrt (* (cmplx/real z01) (cmplx/real z02))))
-                    ;;      denom)
-                    ;;   (/ (+ (* (+ z01 h11) (- 1 (* h22 (cmplx/conjugate z02)))) (* h12 h21 (cmplx/conjugate z02)))
-                    ;;      denom)]])))))
-
 
 (defmethod from-s :t [{:keys [data z0]}] ;https://scikit-rf.readthedocs.io/en/latest/_modules/skrf/network.html#s2t
   (let [[nfreqs nportsa nportsb] (mat/shape data)]
