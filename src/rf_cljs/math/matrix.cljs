@@ -13,7 +13,8 @@
     :mat
     (if (or (matrix? (first items))
             (number? (first items))
-            (cplx/complex? (first items)))
+            (cplx/complex? (first items))
+            (boolean? (first items)))
       :mat
       (when (vector? (first items))
         (if (matrix? (first (first items)))
@@ -154,6 +155,8 @@
       (-fill (rest shape) value))))
 
 (defn fill [shape value]
+  "Constructs a new `mathjs/matrix` of shape `shape` with 
+   `value` for every entry."
   (matrix (-fill shape value)))
 
 (defn <
@@ -178,10 +181,21 @@
   ;;    false)) ; TODO make this work if needed
   )
 
+(defn any
+  "Returns `true` if any of the elements of `mathjs/matrix m` are true."
+  [m]
+  (some true? (to-vec (flat m))))
+
+(defn all
+  "Returns `true` if all of the elements of `mathjs/matrix m` are true."
+  [m]
+  (every? true? (to-vec (flat m))))
+
 (defn equals
   ([x y]
    (mathjs/deepEqual x y))
   ([x y eps]
    (every? true? (to-vec (flat (< (abs (- x y)) (+ (zeros (shape x)) eps)))))))
 
+(fill [3] true)
 ;; There are indeed more, but I'm getting bored 

@@ -90,7 +90,6 @@
                                         (* 0.5)))]
                     (* F (- (mat/eye nportsa) (* G Y)) (mat/inv (+ (mat/eye nportsa) (* G Y))) (mat/inv F)))))))
 
-
 ; 2-port parameters
 (defmethod to-s :abcd [{:keys [data z0]}]
   (let [[nfreqs nportsa nportsb] (mat/shape data)
@@ -137,10 +136,11 @@
 (defmethod to-s :t [{:keys [data z0]}]
   (let [[nfreqs nportsa nportsb] (mat/shape data)]
     (assert (= nportsa nportsb) "Matrix must be square")
-    (for [i (range nfreqs)
-          :let [[Tee Tei Tie Tii] (internal-external-partition (mat/squeeze (mat/idx data i :all :all)))]]
-      (mat/matrix [[(* Tie (mat/inv Tee)) (- Tii (* Tie (mat/inv Tee) Tei))]
-                   [(mat/inv Tee) (* -1 (mat/inv Tee) Tei)]]))))
+    (mat/matrix (for [i (range nfreqs)
+           :let [[Tee Tei Tie Tii] (internal-external-partition (mat/squeeze (mat/idx data i :all :all)))]]
+       (mat/matrix [[(* Tie (mat/inv Tee)) (- Tii (* Tie (mat/inv Tee) Tei))]
+                    [(mat/inv Tee) (* -1 (mat/inv Tee) Tei)]])))))
+
 
 (defmulti from-s :to)
 
@@ -187,17 +187,25 @@
                         S22 (mat/idx data i 1 1)
                         denom  (* 2 S21 (sqrt (* (cmplx/real z01) (cmplx/real z02))))]
                     [[
-                      (/ (+ (* (+ (cmplx/conjugate z01) (* S11 z01)) (- 1 S11)) (* S12 S21 z01)) denom) ; A
-                      (/ (- (* (- 1 S11) (- 1 S22) ) (* S21 S12)) denom) ; B
+                      (/ (+ (* (+ (cmplx/conjugate z01) (* S11 z01)) (- 1 S22)) (* S12 S21 z01)) denom) ; A
+                      (/ (- (* (+ (cmplx/conjugate z01) (* S11 z01)) (+ (cmplx/conjugate z02) (* S22 z02))) 
+                            (* S12 S21 z01 z02)) denom) ; B 
                       ]
                      [
-                      (/ (- (* (+ (cmplx/conjugate z01) (* S11 z01)) (+ (cmplx/conjugate z02) (* S22 z02))) 
-                            (* S12 S21 z01 z02)) denom) ; C 
-                      (/ (+ (* (- 1 S11) (+ (cmplx/conjugate z02) (* S22 z02)) ) (* S12 S21 z02)) denom)
+                      (/ (- (* (- 1 S11) (- 1 S22) ) (* S21 S12)) denom) ; C
+                      (/ (+ (* (- 1 S11) (+ (cmplx/conjugate z02) (* S22 z02)) ) (* S12 S21 z02)) denom) ; D
                      ]])))))
 
 (defmethod from-s :h [{:keys [data z0]}])
-(defmethod from-s :t [{:keys [data z0]}])
+
+(defmethod from-s :t [{:keys [data z0]}]
+  (let [[nfreqs nportsa nportsb] (mat/shape data)]
+    (assert (= nportsa nportsb) "Matrix must be square")
+    (mat/matrix (for [i (range nfreqs)
+           :let [[Tee Tei Tie Tii] (internal-external-partition (mat/squeeze (mat/idx data i :all :all)))]]
+       (mat/matrix [[(* Tie (mat/inv Tee)) (- Tii (* Tie (mat/inv Tee) Tei))]
+                    [(mat/inv Tee) (* -1 (mat/inv Tee) Tei)]])))))
+
 (defn convert [input]
   (from-s (assoc input :data (to-s input))))
 

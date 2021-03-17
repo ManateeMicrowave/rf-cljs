@@ -12,7 +12,7 @@
     "react": "16.13.0",
     "react-dom": "16.13.0",
     "stack-trace": "0.0.10",
-    "stacktrace-js": "2.0.2",
+    "stacktrace-js": "^2.0.2",
     "ws": "7.3.1"
   },
   "version": "0.1.0",
