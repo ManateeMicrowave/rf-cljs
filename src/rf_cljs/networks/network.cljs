@@ -137,9 +137,9 @@
   (let [[nfreqs nportsa nportsb] (mat/shape data)]
     (assert (= nportsa nportsb) "Matrix must be square")
     (mat/matrix (for [i (range nfreqs)
-           :let [[Tee Tei Tie Tii] (internal-external-partition (mat/squeeze (mat/idx data i :all :all)))]]
-       (mat/matrix [[(* Tie (mat/inv Tee)) (- Tii (* Tie (mat/inv Tee) Tei))]
-                    [(mat/inv Tee) (* -1 (mat/inv Tee) Tei)]])))))
+                      :let [[Tee Tei Tie Tii] (internal-external-partition (mat/squeeze (mat/idx data i :all :all)))]]
+                  (mat/matrix [[(* Tie (mat/inv Tee)) (- Tii (* Tie (mat/inv Tee) Tei))]
+                               [(mat/inv Tee) (* -1 (mat/inv Tee) Tei)]])))))
 
 
 (defmulti from-s :to)
@@ -186,25 +186,54 @@
                         S21 (mat/idx data i 1 0)
                         S22 (mat/idx data i 1 1)
                         denom  (* 2 S21 (sqrt (* (cmplx/real z01) (cmplx/real z02))))]
-                    [[
-                      (/ (+ (* (+ (cmplx/conjugate z01) (* S11 z01)) (- 1 S22)) (* S12 S21 z01)) denom) ; A
-                      (/ (- (* (+ (cmplx/conjugate z01) (* S11 z01)) (+ (cmplx/conjugate z02) (* S22 z02))) 
+                    [[(/ (+ (* (+ (cmplx/conjugate z01) (* S11 z01)) (- 1 S22)) (* S12 S21 z01)) denom) ; A
+                      (/ (- (* (+ (cmplx/conjugate z01) (* S11 z01)) (+ (cmplx/conjugate z02) (* S22 z02)))
                             (* S12 S21 z01 z02)) denom) ; B 
                       ]
-                     [
-                      (/ (- (* (- 1 S11) (- 1 S22) ) (* S21 S12)) denom) ; C
-                      (/ (+ (* (- 1 S11) (+ (cmplx/conjugate z02) (* S22 z02)) ) (* S12 S21 z02)) denom) ; D
-                     ]])))))
+                     [(/ (- (* (- 1 S11) (- 1 S22)) (* S21 S12)) denom) ; C
+                      (/ (+ (* (- 1 S11) (+ (cmplx/conjugate z02) (* S22 z02))) (* S12 S21 z02)) denom) ; D
+                      ]])))))
 
-(defmethod from-s :h [{:keys [data z0]}])
+(defmethod from-s :h [{:keys [data z0]}]
+  (let [[nfreqs nportsa nportsb] (mat/shape data)
+        z0 (fix-z0-shape z0 nportsa)
+        z01 (mat/idx z0 0)
+        z02 (mat/idx z0 1)]
+    (assert (= nportsa nportsb 2) "H parameters must have two ports")
+    (mat/matrix (for [i (range nfreqs)]
+                  (let [s11 (mat/idx data i 0 0)
+                        s12 (mat/idx data i 0 1)
+                        s21 (mat/idx data i 1 0)
+                        s22 (mat/idx data i 1 1)
+                        denom (+ (* (- 1 s11) (+ (cmplx/conjugate z02) (* s22 z02))) (* s12 s21 z02))]
+                    [[(/ (- (* (+ (cmplx/conjugate z01) (* s11 z01)) (+ (cmplx/conjugate z02) (* s22 z02))) (* s12 s21 z01 z02))
+                         denom)
+                      (/ (* (- 2) s21 (sqrt (* (cmplx/real z01) (cmplx/real z02))))
+                         denom)]
+                     [(/ (* 2 s12 (sqrt (* (cmplx/real z01) (cmplx/real z02))))
+                         denom)
+                      (/ (- (* (- 1 s11) (- 1 s22)) (* s12 s21))
+                         denom)]])))))
+                    ;; [[(/ (- (* (- h11 (cmplx/conjugate z01)) (+ 1 (* h22 z02))) (* h12 h21 z02))
+                    ;;      denom)
+                    ;;   (/ (* 2 h12 (sqrt (* (cmplx/real z01) (cmplx/real z02))))
+                    ;;      denom)]
+                    ;;  [(/ (* -2 h21 (sqrt (* (cmplx/real z01) (cmplx/real z02))))
+                    ;;      denom)
+                    ;;   (/ (+ (* (+ z01 h11) (- 1 (* h22 (cmplx/conjugate z02)))) (* h12 h21 (cmplx/conjugate z02)))
+                    ;;      denom)]])))))
 
-(defmethod from-s :t [{:keys [data z0]}]
+
+(defmethod from-s :t [{:keys [data z0]}] ;https://scikit-rf.readthedocs.io/en/latest/_modules/skrf/network.html#s2t
   (let [[nfreqs nportsa nportsb] (mat/shape data)]
     (assert (= nportsa nportsb) "Matrix must be square")
     (mat/matrix (for [i (range nfreqs)
-           :let [[Tee Tei Tie Tii] (internal-external-partition (mat/squeeze (mat/idx data i :all :all)))]]
-       (mat/matrix [[(* Tie (mat/inv Tee)) (- Tii (* Tie (mat/inv Tee) Tei))]
-                    [(mat/inv Tee) (* -1 (mat/inv Tee) Tei)]])))))
+                      :let [[S11 S12 S21 S22] (internal-external-partition (mat/squeeze (mat/idx data i :all :all)))]]
+                       ; Note Sii are matrices in the case of a n > 2 even s matrix being input
+                  (mat/matrix [[(- S12 (* S11 (mat/inv S21) S22))
+                                (* S11 (mat/inv S21))]
+                               [(* (mat/inv (- S21)) S22)
+                                (mat/inv S21)]])))))
 
 (defn convert [input]
   (from-s (assoc input :data (to-s input))))
