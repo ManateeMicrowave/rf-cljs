@@ -79,7 +79,7 @@
   (mathjs/inv m))
 
 (defn eye [shape]
-  (mathjs/identity (->js shape)))
+  (mathjs/identity (->js shape))) ;->js converts to javascript version :'-)
 
 (defn random [shape & minmax]
   (matrix (apply mathjs/random (->js shape) minmax)))
