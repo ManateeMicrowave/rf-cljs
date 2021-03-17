@@ -7,6 +7,9 @@
   [re im]
   (mathjs/Complex (str re "+" im "i")))
 
+(defn complex? [c]
+  (= "Complex" (. c -type)))
+
 (defn argument
   "Computes the argument of a complex value `x`
   For complex number `a+bi`, argument is computed as `(atan2 b a)`

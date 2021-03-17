@@ -3,10 +3,18 @@
 
  :dependencies
  [[cljs-bean "1.6.0"]
-  [olical/cljs-test-runner "3.8.0"]
+  [lambdaisland/chui "1.0.173"]
   [binaryage/devtools "1.0.2"]]
 
  :builds
- {:ci {:target :karma
+ {:test {:target :browser-test
+         :runner-ns lambdaisland.chui.shadow.browser-runner
+         :test-dir "target/browser-test"
+         :asset-path "/ui"
+         :ns-regexp "-test$"
+         :devtools {:repl-pprint true
+                    :http-port 8347
+                    :http-root "target/browser-test"}}
+  :ci {:target :karma
        :output-to "target/ci.js"
        :ns-regexp "-test$"}}}
