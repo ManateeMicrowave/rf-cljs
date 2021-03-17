@@ -6,6 +6,9 @@
 (defn matrix [& items]
   (mathjs/matrix (apply ->js items)))
 
+(defn matrix? [m]
+  (= (type m) mathjs/Matrix))
+
 (defn to-vec [m]
   (->clj (. m toArray)))
 
@@ -39,6 +42,9 @@
 (defn dot-equals [x y]
   (mathjs/equal x y))
 
+(defn diag [v & k]
+  (matrix (apply mathjs/diag (->js v) k)))
+
 (defn apply-axis [m dim f]
   (mathjs/apply m dim f))
 
@@ -47,6 +53,9 @@
 
 (defn col [m idx]
   (mathjs/column m idx))
+
+(defn ones [shape]
+  (matrix (mathjs/ones (->js shape))))
 
 (defn flat [m]
   (mathjs/flatten m))
@@ -65,6 +74,9 @@
 
 (defn det [m]
   (mathjs/det m))
+
+(defn inv [m]
+  (mathjs/inv m))
 
 (defn random [shape & minmax]
   (matrix (apply mathjs/random (->js shape) minmax)))

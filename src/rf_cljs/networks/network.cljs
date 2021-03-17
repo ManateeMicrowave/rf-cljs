@@ -1,9 +1,9 @@
 (ns rf-cljs.networks.network
   (:refer-clojure :exclude [+ - * /])
   (:require
-   [rf-cljs.math.operations :refer [+ - * / cos sin sqrt]]
-   [rf-cljs.math.complex :refer [real conjugate]]
-   [rf-cljs.math.matrix :refer [matrix] :as mat]
+   [rf-cljs.math.operations :refer [+ - * / abs sqrt]]
+   [rf-cljs.math.complex :as cmplx]
+   [rf-cljs.math.matrix :as mat]
    ["mathjs" :as mathjs]))
 
 ;; (defmulti abcd :type)
@@ -31,30 +31,49 @@
 ;; (defmethod abcd :transformer [{:keys [N]}]
 ;;   (matrix [[N 0] [0 (/ N)]]))
 
+(defn fix-z0-shape [Z0 nports]
+  (if (or (mat/matrix? Z0)
+          (vector? Z0))
+    (let [Z0 (mat/matrix Z0)]
+      (assert (= [nports] (mat/shape Z0)) "(count Z0) must equal nports")
+      Z0)
+    (* Z0 (mat/ones nports))))
+
 (defmulti to-s :from)
 
 (defmethod to-s :abcd [{:keys [data Z0]}]
-  (let [z01 (if (= (type Z0) mathjs/Matrix)
-              (mat/idx Z0 0)
-              Z0)
-        z02 (if (= (type Z0) mathjs/Matrix)
-              (mat/idx Z0 1)
-              Z0)]
-    (matrix (for [i (range (first (mat/shape data)))]
-              (let [A (mat/idx data i 0 0)
-                    B (mat/idx data i 0 1)
-                    C (mat/idx data i 1 0)
-                    D (mat/idx data i 1 1)
-                    denom (+ (* A z02) B (* C z01 z02) (* D z01))]
-                [[(/ (+ (* A z02) B (* -1 C (conjugate z01) z02) (* -1 D (conjugate z01)))
-                     denom)
-                  (/ (* 2 (sqrt (* (real z01) (real z02))))
-                     denom)]
-                 [(/ (* 2 (- (* A D) (* B C)) (sqrt (* (real z01) (real z02))))
-                     denom)
-                  (/ (+ (* (- A) (conjugate z02)) B (* -1 C z01 (conjugate z02)) (* D z01)))]])))))
+  (let [[nfreqs nportsa nportsb] (mat/shape data)
+        Z0 (fix-z0-shape Z0 nportsa)
+        z01 (mat/idx Z0 0)
+        z02 (mat/idx Z0 1)]
+    (assert (= nportsa nportsb 2) "ABCD params must have two ports")
+    (mat/matrix (for [i (range nfreqs)]
+                  (let [A (mat/idx data i 0 0)
+                        B (mat/idx data i 0 1)
+                        C (mat/idx data i 1 0)
+                        D (mat/idx data i 1 1)
+                        denom (+ (* A z02) B (* C z01 z02) (* D z01))]
+                    [[(/ (+ (* A z02) B (* -1 C (cmplx/conjugate z01) z02) (* -1 D (cmplx/conjugate z01)))
+                         denom)
+                      (/ (* 2 (sqrt (* (cmplx/real z01) (cmplx/real z02))))
+                         denom)]
+                     [(/ (* 2 (- (* A D) (* B C)) (sqrt (* (cmplx/real z01) (cmplx/real z02))))
+                         denom)
+                      (/ (+ (* (- A) (cmplx/conjugate z02)) B (* -1 C z01 (cmplx/conjugate z02)) (* D z01)))]])))))
 
-(defmethod to-s :z [{:keys [data Z0]}])
+(defmethod to-s :z [{:keys [data Z0]}]
+  (let [[nfreqs nportsa nportsb] (mat/shape data)
+        Z0 (fix-z0-shape Z0 nportsa)]
+    (assert (= nportsa nportsb) "Matrix must be square")
+    (mat/matrix (for [i (range nfreqs)
+                      :let [Z (mat/squeeze (mat/idx data i :all :all))]]
+                  (let [G (mat/diag Z0)
+                        F (mat/diag (-> (cmplx/real Z0)
+                                        abs
+                                        sqrt
+                                        (* 0.5)))]
+                    (* F (- Z (mat/ctranspose G)) (mat/inv (+ Z G)) (mat/inv F)))))))
+
 (defmethod to-s :y [{:keys [data Z0]}])
 (defmethod to-s :s [{:keys [data Z0]}])
 (defmethod to-s :t [{:keys [data Z0]}])
@@ -75,9 +94,9 @@
 (defn passivity [])
 
 (defn reciprocity [s]
-  (matrix (for [i (range (first (mat/shape s)))
-                :let [s (mat/squeeze (mat/idx s i :all :all))]]
-            (- s (mat/transpose s)))))
+  (mat/matrix (for [i (range (first (mat/shape s)))
+                    :let [s (mat/squeeze (mat/idx s i :all :all))]]
+                (- s (mat/transpose s)))))
 
 (defn passive? [])
 
