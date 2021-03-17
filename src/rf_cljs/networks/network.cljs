@@ -74,7 +74,19 @@
                                         (* 0.5)))]
                     (* F (- Z (mat/ctranspose G)) (mat/inv (+ Z G)) (mat/inv F)))))))
 
-(defmethod to-s :y [{:keys [data Z0]}])
+(defmethod to-s :y [{:keys [data Z0]}]
+  (let [[nfreqs nportsa nportsb] (mat/shape data)
+        Z0 (fix-z0-shape Z0 nportsa)]
+    (assert (= nportsa nportsb) "Matrix must be square")
+    (mat/matrix (for [i (range nfreqs)
+                      :let [Y (mat/squeeze (mat/idx data i :all :all))]]
+                  (let [G (mat/diag Z0)
+                        F (mat/diag (-> (cmplx/real Z0)
+                                        abs
+                                        sqrt
+                                        (* 0.5)))]
+                    (* F (- 1 (* G Y)) (mat/inv (+ 1 (* G Y))) (mat/inv F)))))))
+
 (defmethod to-s :s [{:keys [data Z0]}])
 (defmethod to-s :t [{:keys [data Z0]}])
 (defmethod to-s :h [{:keys [data Z0]}])
