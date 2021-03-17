@@ -46,7 +46,7 @@
         Z0 (fix-z0-shape Z0 nportsa)
         z01 (mat/idx Z0 0)
         z02 (mat/idx Z0 1)]
-    (assert (= nportsa nportsb 2) "ABCD params must have two ports")
+    (assert (= nportsa nportsb 2) "ABCD parameters must have two ports")
     (mat/matrix (for [i (range nfreqs)]
                   (let [A (mat/idx data i 0 0)
                         B (mat/idx data i 0 1)
@@ -59,7 +59,8 @@
                          denom)]
                      [(/ (* 2 (- (* A D) (* B C)) (sqrt (* (cmplx/real z01) (cmplx/real z02))))
                          denom)
-                      (/ (+ (* (- A) (cmplx/conjugate z02)) B (* -1 C z01 (cmplx/conjugate z02)) (* D z01)))]])))))
+                      (/ (+ (* (- A) (cmplx/conjugate z02)) B (* -1 C z01 (cmplx/conjugate z02)) (* D z01))
+                         denom)]])))))
 
 (defmethod to-s :z [{:keys [data Z0]}]
   (let [[nfreqs nportsa nportsb] (mat/shape data)
@@ -89,9 +90,37 @@
 
 (defmethod to-s :s [{:keys [data Z0]}] data)
 
-(defmethod to-s :t [{:keys [data Z0]}])
+(defmethod to-s :t [{:keys [data Z0]}]
+  (let [[nfreqs nportsa nportsb] (mat/shape data)]
+    (assert (= nportsa nportsb 2) "T parameters must have two ports")
+    (mat/matrix (for [i (range nfreqs)
+                      :let [T12 (mat/idx data i 0 1)
+                            T21 (mat/idx data i 1 0)
+                            T22 (mat/idx data i 1 1)
+                            det-t (mat/det (mat/squeeze (mat/idx data i :all :all)))]]
+                  [[(/ T12 T22) (/ det-t T22)]
+                   [(/ T22) (/ (- T21 T22))]]))))
 
-(defmethod to-s :h [{:keys [data Z0]}])
+(defmethod to-s :h [{:keys [data Z0]}]
+  (let [[nfreqs nportsa nportsb] (mat/shape data)
+        Z0 (fix-z0-shape Z0 nportsa)
+        z01 (mat/idx Z0 0)
+        z02 (mat/idx Z0 1)]
+    (assert (= nportsa nportsb 2) "H parameters must have two ports")
+    (mat/matrix (for [i (range nfreqs)]
+                  (let [h11 (mat/idx data i 0 0)
+                        h12 (mat/idx data i 0 1)
+                        h21 (mat/idx data i 1 0)
+                        h22 (mat/idx data i 1 1)
+                        denom (- (* (+ z01 h11) (+ 1 (* h22 z02))) (* h12 h21 z02))]
+                    [[(/ (- (* (- h11 (cmplx/conjugate z01)) (+ 1 (* h22 z02))) (* h12 h21 z02))
+                         denom)
+                      (/ (* 2 h12 (sqrt (* (cmplx/real z01) (cmplx/real z02))))
+                         denom)]
+                     [(/ (* -2 h21 (sqrt (* (cmplx/real z01) (cmplx/real z02))))
+                         denom)
+                      (/ (+ (* (+ z01 h11) (- 1 (* h22 (cmplx/conjugate z02)))) (* h12 h21 (cmplx/conjugate z02)))
+                         denom)]])))))
 
 (defmulti from-s :to)
 
