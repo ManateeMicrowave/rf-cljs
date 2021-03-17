@@ -41,6 +41,25 @@
       z0)
     (* z0 (mat/ones nports))))
 
+(defn internal-external-partition
+  "Partition the matrix of 2n ports into internal-external blocks
+  Returns [ee ei ie ii]
+  http://www.microwave.fr/publications/151.pdf"
+  [data]
+  (let [[m n] (mat/shape data)
+        part-n (dec (quot n 2))]
+    (assert (= m n) "Matrix must be square")
+    (assert (= 0 (mod m 2)) "Matrix must be 2nx2n")
+    (if (= n 2)
+      [(mat/matrix [(mat/idx data 0 0)])
+       (mat/matrix [(mat/idx data 0 1)])
+       (mat/matrix [(mat/idx data 1 0)])
+       (mat/matrix [(mat/idx data 1 1)])]
+      [(mat/idx data [0 part-n] [0 part-n])
+       (mat/idx data [0 part-n] [(inc part-n) (dec n)])
+       (mat/idx data [(inc part-n) (dec n)] [0 part-n])
+       (mat/idx data [(inc part-n) (dec n)] [(inc part-n) (dec n)])])))
+
 (defmulti to-s :from)
 
 ; N-port parameters
@@ -57,7 +76,7 @@
                                         abs
                                         sqrt
                                         (* 0.5)))]
-                    (* F (- Z (mat/ctranspose G)) (mat/inv (+ Z G)) (mat/inv F))))))) ; F*(Z-G)*(Z+G)^-1*F^-1 = S
+                    (* F (- Z (mat/ctranspose G)) (mat/inv (+ Z G)) (mat/inv F)))))))
 
 (defmethod to-s :y [{:keys [data z0]}]
   (let [[nfreqs nportsa nportsb] (mat/shape data)
@@ -120,14 +139,11 @@
 
 (defmethod to-s :t [{:keys [data z0]}]
   (let [[nfreqs nportsa nportsb] (mat/shape data)]
-    (assert (= nportsa nportsb 2) "T parameters must have two ports")
-    (mat/matrix (for [i (range nfreqs)
-                      :let [T12 (mat/idx data i 0 1)
-                            T21 (mat/idx data i 1 0)
-                            T22 (mat/idx data i 1 1)
-                            det-t (mat/det (mat/squeeze (mat/idx data i :all :all)))]]
-                  [[(/ T12 T22) (/ det-t T22)]
-                   [(/ T22) (/ (- T21 T22))]]))))
+    (assert (= nportsa nportsb) "Matrix must be square")
+    (for [i (range nfreqs)
+          :let [[Tee Tei Tie Tii] (internal-external-partition (mat/squeeze (mat/idx data i :all :all)))]]
+      (mat/block [(mat/matrix [(* Tie (mat/inv Tee))]) (- Tii (* Tie (mat/inv Tee) Tei))]
+                 [(mat/inv Tee) (mat/matrix [(* -1 (mat/inv Tee) Tei)])]))))
 
 (defmulti from-s :to)
 
