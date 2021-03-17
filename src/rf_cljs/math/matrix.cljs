@@ -1,20 +1,24 @@
 (ns rf-cljs.math.matrix
   (:require ["mathjs" :as mathjs]
-            [rf-cljs.math.complex :as complex]
+            [rf-cljs.math.complex :as cmplx]
             [cljs-bean.core :refer [->js ->clj]]))
 
 (defn matrix? [m]
   (= (type m) mathjs/Matrix))
 
 (defn -matrix-type [items]
-  (if (number? (first items))
-    :vec
-    (when (vector? (first items))
-      (if (matrix? (first (first items)))
-        :block
-        :mat))))
+  (if (matrix? items)
+    :mat
+    (if (or (matrix? (first items))
+            (number? (first items))
+            (cmplx/complex? (first items)))
+      :mat
+      (when (vector? (first items))
+        (if (matrix? (first (first items)))
+          :block
+          :mat)))))
 
-(defmulti matrix -matrix-type)
+(defmulti matrix #'-matrix-type)
 
 (defn shape [m]
   (->clj (. m size)))
@@ -27,11 +31,6 @@
 
 (defmethod matrix
   :mat
-  [items]
-  (mathjs/matrix (->js items)))
-
-(defmethod matrix
-  :vec
   [items]
   (mathjs/matrix (->js items)))
 
@@ -100,7 +99,7 @@
   (mathjs/equal x y))
 
 (defn diag [v & k]
-  (matrix (apply mathjs/diag (->js v) k)))
+  (apply mathjs/diag (matrix v) k))
 
 (defn apply-axis [m dim f]
   (mathjs/apply m dim f))
@@ -143,7 +142,7 @@
 
 (defn random-complex [shape]
   (let [n (reduce * shape)
-        nums (matrix (into [] (take n (repeatedly complex/random))))]
+        nums (matrix (into [] (take n (repeatedly cmplx/random))))]
     (reshape nums shape)))
 
 (defn equals [x y]

@@ -36,10 +36,10 @@
 (defn fix-z0-shape [z0 nports]
   (if (or (mat/matrix? z0)
           (vector? z0))
-    (let [z0 (mat/matrix z0)]
+    (let [z0 (mat/matrix [z0])]
       (assert (= [nports] (mat/shape z0)) "(count z0) must equal nports")
       z0)
-    (* z0 (mat/ones nports))))
+    (* z0 (mat/ones [nports]))))
 
 (defn internal-external-partition
   "Partition the matrix of 2n ports into internal-external blocks

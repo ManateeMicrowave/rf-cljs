@@ -1,4 +1,4 @@
-(ns rf-cljs-spec
+(ns rf-cljs-test
   (:require
    [cljs.test :refer-macros [deftest is]]
    [rf-cljs.networks.network :as network]
