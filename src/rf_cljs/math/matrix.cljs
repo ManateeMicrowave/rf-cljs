@@ -1,5 +1,5 @@
 (ns rf-cljs.math.matrix
-  (:refer-clojure :exclude [+ - * / <])
+  (:refer-clojure :exclude [+ - * / < > ])
   (:require ["mathjs" :as mathjs]
             [rf-cljs.math.complex :as complex]
             [rf-cljs.math.operations :refer [abs + - * /]]
@@ -138,22 +138,33 @@
 (defn fill [shape value]
   (matrix (-fill shape value)))
 
-(defn equals
+(defn <
+  ([x] (fill (shape x) true))
+  ([x y] (mathjs/smaller x y ))
+  ;; ([x y & more]
+  ;;  (if (mathjs/larger x y)
+  ;;    (if (next more)
+  ;;      (recur y (first more) (next more))
+  ;;      (mathjs/larger y (first more)))
+  ;;    false)) ; TODO make this work if needed
+  )
 
+(defn >
+  ([x] (fill (shape x) true))
+  ([x y] (mathjs/larger x y))
+  ;; ([x y & more]
+  ;;  (if (mathjs/larger x y)
+  ;;    (if (next more)
+  ;;      (recur y (first more) (next more))
+  ;;      (mathjs/larger y (first more)))
+  ;;    false)) ; TODO make this work if needed
+  )
+
+(defn equals
   ([x y]
    (mathjs/deepEqual x y))
   ([x y eps]
-   (- (abs (- x y)) (+ (zeros (shape x)) eps))))
+   (< (abs (- x y)) (+ (zeros (shape x)) eps))))
 
-(defn <
-  ([x] (fill (shape x) true))
-  ([x y] (mathjs/larger x y))
-  ([x y & more]
-   (if (mathjs/larger x y)
-     (if (next more)
-       (recur y (first more) (next more))
-       (mathjs/larger y (first more)))
-     false)))
 
-[ b (+ b 1) (+ b 3)] 
 ;; There are indeed more, but I'm getting bored 
