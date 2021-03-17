@@ -18,6 +18,44 @@
 (defn reshape [m shape]
   (. m reshape (->js shape)))
 
+(defn zeros [shape]
+  (mathjs/zeros (matrix shape)))
+
+(defn block [& items] ; (block [A B R] [C D E]) -> [[A B R] [C D E]]
+  (let [block-rows (count items)
+        row-heights (for [row items]
+                      (first (shape (first row))))]
+    (doseq [i (range block-rows)
+            :let [row (nth items i)]
+            block row
+            :let [n-rows (first (shape block))]]
+      (assert (= n-rows (nth row-heights i)) "Blocks in each row must have the same number of rows"))
+    (let [total-rows (reduce + row-heights)
+          total-cols (reduce + (for [block (first items)]
+                                 (second (shape block))))
+          out-shape [total-rows total-cols]]
+      (doseq [row items
+              :let [cols (reduce + (for [block row]
+                                     (second (shape block))))]]
+        (assert (= total-cols cols) "Total column size must be consistent"))
+      (let [out-mat (zeros out-shape)]
+        (doseq [i (range block-rows)
+                :let [row (nth items i)]
+                j (range (count row))
+                :let [m (nth row j)
+                      [block-rows block-cols] (shape m)
+                      start-row (reduce + (for [k (range 0 i)
+                                                :let [first-block (first (nth items k))]]
+                                            (first (shape first-block))))
+                      start-col (reduce + (for [k (range 0 j)
+                                                :let [m (nth row k)]]
+                                            (second (shape m))))
+                      row-idxs (matrix (range start-row (+ start-row block-rows)))
+                      col-idxs (matrix (range start-col (+ start-col block-cols)))
+                      idxs (mathjs/index row-idxs col-idxs)]]
+          (. out-mat subset idxs m))
+        out-mat))))
+
 (defn squeeze [m]
   (mathjs/squeeze m))
 
