@@ -88,8 +88,9 @@
                         F (mat/diag (-> (cmplx/real z0)
                                         abs
                                         sqrt
+                                        mat/dot-divide
                                         (* 0.5)))]
-                    (* F (- (mat/eye nportsa) (* G Y)) (mat/inv (+ (mat/eye nportsa) (* G Y))) (mat/inv F)))))))
+                    (* F (- (mat/eye nportsa) (* (cmplx/conjugate G) Y)) (mat/inv (+ (mat/eye nportsa) (* G Y))) (mat/inv F)))))))
 
 ; 2-port parameters
 (defmethod to-s :abcd [{:keys [data z0]}]
@@ -106,9 +107,9 @@
                         denom (+ (* A z02) B (* C z01 z02) (* D z01))]
                     [[(/ (+ (* A z02) B (* -1 C (cmplx/conjugate z01) z02) (* -1 D (cmplx/conjugate z01)))
                          denom) ;S11
-                      (/ (* 2 (sqrt (* (cmplx/real z01) (cmplx/real z02))))
+                      (/ (* 2 (- (* A D) (* B C)) (sqrt (* (cmplx/real z01) (cmplx/real z02))))
                          denom)] ;S12
-                     [(/ (* 2 (- (* A D) (* B C)) (sqrt (* (cmplx/real z01) (cmplx/real z02))))
+                     [(/ (* 2 (sqrt (* (cmplx/real z01) (cmplx/real z02))))
                          denom) ;S21
                       (/ (+ (* (- A) (cmplx/conjugate z02)) B (* -1 C z01 (cmplx/conjugate z02)) (* D z01))
                          denom)]]))))) ;S22
@@ -169,9 +170,9 @@
                   (let [G (mat/diag z0)
                         F (mat/diag (-> (cmplx/real z0)
                                         abs
-                                        sqrt
+                                        mat/dot-divide
                                         (* 0.5)))]
-                    (* (mat/inv F)  (mat/inv (+ (* S G) (mat/ctranspose G))) (- (mat/eye nportsa) S) F))))))
+                    (* (mat/inv F) (mat/inv (+ (* S G) (cmplx/conjugate G))) (- (mat/eye nportsa) S) F))))))
 
 ; 2-port parameters
 (defmethod from-s :abcd [{:keys [data z0]}]
@@ -186,13 +187,11 @@
                         S21 (mat/idx data i 1 0)
                         S22 (mat/idx data i 1 1)
                         denom  (* 2 S21 (sqrt (* (cmplx/real z01) (cmplx/real z02))))]
-                    [[(/ (+ (* (+ (cmplx/conjugate z01) (* S11 z01)) (- 1 S22)) (* S12 S21 z01)) denom) ; A
+                    [[(/ (+ (* (+ (cmplx/conjugate z01) (* S11 z01)) (- 1 S22)) (* S12 S21 z01)) denom)
                       (/ (- (* (+ (cmplx/conjugate z01) (* S11 z01)) (+ (cmplx/conjugate z02) (* S22 z02)))
-                            (* S12 S21 z01 z02)) denom) ; B
-                      ]
-                     [(/ (- (* (- 1 S11) (- 1 S22)) (* S21 S12)) denom) ; C
-                      (/ (+ (* (- 1 S11) (+ (cmplx/conjugate z02) (* S22 z02))) (* S12 S21 z02)) denom) ; D
-                      ]])))))
+                            (* S12 S21 z01 z02)) denom)]
+                     [(/ (- (* (- 1 S11) (- 1 S22)) (* S21 S12)) denom)
+                      (/ (+ (* (- 1 S11) (+ (cmplx/conjugate z02) (* S22 z02))) (* S12 S21 z02)) denom)]])))))
 
 (defmethod from-s :h [{:keys [data z0]}]
   (let [[nfreqs nportsa nportsb] (mat/shape data)
@@ -208,9 +207,9 @@
                         denom (+ (* (- 1 s11) (+ (cmplx/conjugate z02) (* s22 z02))) (* s12 s21 z02))]
                     [[(/ (- (* (+ (cmplx/conjugate z01) (* s11 z01)) (+ (cmplx/conjugate z02) (* s22 z02))) (* s12 s21 z01 z02))
                          denom)
-                      (/ (* (- 2) s21 (sqrt (* (cmplx/real z01) (cmplx/real z02))))
+                      (/ (* 2 s12 (sqrt (* (cmplx/real z01) (cmplx/real z02))))
                          denom)]
-                     [(/ (* 2 s12 (sqrt (* (cmplx/real z01) (cmplx/real z02))))
+                     [(/ (* -2 s21 (sqrt (* (cmplx/real z01) (cmplx/real z02))))
                          denom)
                       (/ (- (* (- 1 s11) (- 1 s22)) (* s12 s21))
                          denom)]])))))
@@ -227,7 +226,11 @@
                                 (mat/inv S21)]])))))
 
 (defn convert [input]
-  (from-s (assoc input :data (to-s input))))
+  (if (= (:from input) (:to input))
+    (:data input)
+    (if (= (:to input) :s)
+      (to-s input)
+      (from-s (assoc input :data (to-s input))))))
 
 (defn renormalize
   "Takes `s` an NxMxM matrix of s-parameters referenced to 

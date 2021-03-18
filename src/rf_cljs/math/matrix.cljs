@@ -1,5 +1,5 @@
 (ns rf-cljs.math.matrix
-  (:refer-clojure :exclude [+ - * / < > ])
+  (:refer-clojure :exclude [+ - * / < >])
   (:require ["mathjs" :as mathjs]
             [rf-cljs.math.complex :as cplx]
             [rf-cljs.math.operations :refer [abs + - * /]]
@@ -92,8 +92,11 @@
 (defn dot-times [x y]
   (mathjs/dotMultiply x y))
 
-(defn dot-divide [x y]
-  (mathjs/dotDivide x y))
+(defn dot-divide
+  ([x]
+   (mathjs/dotDivide 1 x))
+  ([x y]
+   (mathjs/dotDivide x y)))
 
 (defn dot-pow [x y]
   (mathjs/dotPow x y))
@@ -147,7 +150,7 @@
   (let [n (reduce * shape)
         nums (matrix (into [] (take n (repeatedly cplx/random))))]
     (reshape nums shape)))
-  
+
 (defn -fill [shape value]
   (if (= (count shape) 0)
     value
@@ -161,7 +164,7 @@
 
 (defn <
   ([x] (fill (shape x) true))
-  ([x y] (mathjs/smaller x y ))
+  ([x y] (mathjs/smaller x y))
   ;; ([x y & more]
   ;;  (if (mathjs/larger x y)
   ;;    (if (next more)
@@ -198,4 +201,4 @@
    (every? true? (to-vec (flat (< (abs (- x y)) (+ (zeros (shape x)) eps)))))))
 
 (fill [3] true)
-;; There are indeed more, but I'm getting bored 
+;; There are indeed more, but I'm getting bored

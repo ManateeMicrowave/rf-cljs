@@ -8,17 +8,18 @@
    [rf-cljs.math.matrix :as mat]))
 
 (def networks [:abcd :z :y :s :t :h])
-(def test-network-size [1 2 2])
-(def eps 0.000001) ; epsilon used for floating point equality comparisons
+(def test-network-size [100 2 2])
+(def eps 1e-12) ; epsilon used for floating point equality comparisons
 
 (deftest round-trip-network
-  (let [abcd (mat/random-complex test-network-size)]
-    (doseq [net networks
-            z0 [50 (cplx/complex 50 25)]
-            :let [to (network/convert {:from :abcd :to net :data abcd :z0 z0})
-                  from (network/convert {:from net :to :abcd :data to :z0 z0})]]
-      (testing (str "Roundtrip abcd -> " net " -> abcd")
-        (is (mat/equals abcd from eps))))))
+  (let [data (mat/random-complex test-network-size)]
+    (doseq [neta networks
+            netb networks
+            :let [z0 (cplx/complex 1 1)
+                  to (network/convert {:from neta :to netb :data data :z0 z0})
+                  from (network/convert {:from netb :to neta :data to :z0 z0})]]
+      (testing (str "Roundtrip " neta " -> " netb " -> " neta)
+        (is (mat/equals data from eps))))))
 
 (deftest renomalize
   (let [s (mat/random-complex test-network-size)
@@ -27,21 +28,20 @@
       (is (mat/equals s (network/renormalize z75 75 50)) eps))))
 
 (def param-map
-  "Map of parameter keywords to parameters, all corresponding to a two port network consisting
-   of a shunt -50jΩ reactance and series 50 Ω resistance. 2x2 parameter matrix is repeated twice
+  "Map of parameter keywords to parameters. 2x2 parameter matrix is repeated twice
    at top dimension to test "
-  {:s     (mat/matrix [[[(cplx/complex -0.07692308 -0.61538462) (cplx/complex 0.46153846 -0.30769231)]
-                        [(cplx/complex 0.46153846 -0.30769231) (cplx/complex 0.23076923 -0.15384615)]]])
-   :z     (mat/matrix [[[(cplx/complex 0 -50) (cplx/complex 0 -50)]
-                        [(cplx/complex 0 -50) (cplx/complex 50 -50)]]])
-   :y     (mat/matrix [[[(cplx/complex 0.02 0.02) (cplx/complex -0.02 0)]
-                        [(cplx/complex -0.02 0) (cplx/complex 0.02 0)]]])
-   :abcd  (mat/matrix [[[(cplx/complex 1 0) (cplx/complex 50 0)]
-                        [(cplx/complex 0 0.02) (cplx/complex 1 1)]]])
-   :h     (mat/matrix [[[(cplx/complex -5.19575693e+01 -2.07993441e+00) (cplx/complex -3.99833605e-02 -8.15660555e-04)]
-                        [(cplx/complex 3.99833605e-02 8.15660555e-04) (cplx/complex -1.92000065e-02 3.19866884e-07)]]])
-   :t     (mat/matrix [[[(cplx/complex 0.5 0) (cplx/complex 0.5 -1)]
-                        [(cplx/complex -0.5 0) (cplx/complex 1.5 1)]]])})
+  {:s     (mat/matrix [[[(cplx/complex 1 0) (cplx/complex -1 0)]
+                        [(cplx/complex -1 1) (cplx/complex -1 -1)]]])
+   :z     (mat/matrix [[[(cplx/complex -100 -150) (cplx/complex 50 50)]
+                        [(cplx/complex 100 0) (cplx/complex -50 0)]]])
+   :y     (mat/matrix [[[(cplx/complex 0 0.02) (cplx/complex -0.02 0.02)]
+                        [(cplx/complex 0 0.04) (cplx/complex -0.06 0.04)]]])
+   :abcd  (mat/matrix [[[(cplx/complex -1 -1.5) (cplx/complex 0 25)]
+                        [(cplx/complex 0.01 0) (cplx/complex -0.5 0)]]])
+   :h     (mat/matrix [[[(cplx/complex 0 -50) (cplx/complex -1 -1)]
+                        [(cplx/complex 2 0) (cplx/complex -0.02 0)]]])
+   :t     (mat/matrix [[[(cplx/complex -1 -1) (cplx/complex -0.5 -0.5)]
+                        [(cplx/complex 0 -1) (cplx/complex -0.5 -0.5)]]])})
 
 (deftest to-s-tests
   (doseq [net networks]
@@ -52,6 +52,3 @@
   (doseq [net networks]
     (testing (str net)
       (is (mat/equals (net param-map) (network/from-s {:to net :data (:s param-map) :z0 50}) eps)))))
-
-
-
