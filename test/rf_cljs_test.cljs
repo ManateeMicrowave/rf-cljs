@@ -5,6 +5,7 @@
    [cljs.test :refer-macros [deftest is testing]]
    [rf-cljs.math.operations :refer [+ - * / abs sqrt < > <= >=]]
    [rf-cljs.network.params :as params]
+   [rf-cljs.network.params :as touchstone]
    [rf-cljs.math.complex :as cplx]
    [rf-cljs.math.matrix :as mat]))
 
@@ -129,4 +130,5 @@
 
 ;; (defn test-touchstone-read
 ;;   (for [fname touchstone-file-list]
-;;     (is ())))
+;;     (is (network-equals (touchstone/read (read-file fname) test-network))))) 
+;;     TODO find place for and implement network-equals

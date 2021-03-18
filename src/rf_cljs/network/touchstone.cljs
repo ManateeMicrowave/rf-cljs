@@ -8,7 +8,7 @@
    })
 
 (defn read
-  "Takes a string `file-contents` and outputs a map with the following members:
+  "Takes a string `file-contents` and outputs a network map with the following members:
    {
       :format <`str` representing how the two columns of floating point numbers are to be 
               combined to make one complex number>
@@ -17,4 +17,5 @@
       :f <n-nfreqs
 
    }"
-  [file-contents])
+  [file-contents]
+  file-contents)
