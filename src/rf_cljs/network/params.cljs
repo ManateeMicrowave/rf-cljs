@@ -72,6 +72,11 @@
       2 (f data z0)
       3 (mat/broadcast data #(f % z0) 0))))
 
+(defn -destructure-two-port [m]
+  (assert (two-port? m) "Parameters must be two port")
+  [(mat/idx m 0 0) (mat/idx m 0 1)
+   (mat/idx m 1 0) (mat/idx m 1 1)])
+
 (defn -z2s [Z z0]
   (let [G (mat/diag z0)
         F (mat/diag (-> (cmplx/real z0)
@@ -114,10 +119,7 @@
 (defn -a2s [ABCD z0]
   (let [z01 (mat/idx z0 0)
         z02 (mat/idx z0 1)
-        A   (mat/idx ABCD 0 0)
-        B   (mat/idx ABCD 0 1)
-        C   (mat/idx ABCD 1 0)
-        D   (mat/idx ABCD 1 1)
+        [A B C D] (-destructure-two-port ABCD)
         denom (+ (* A z02) B (* C z01 z02) (* D z01))]
     (mat/matrix [[(/ (+ (* A z02) B (* -1 C (cmplx/conjugate z01) z02) (* -1 D (cmplx/conjugate z01)))
                      denom)
@@ -131,24 +133,18 @@
 (defn -s2a [S z0]
   (let [z01 (mat/idx z0 0)
         z02 (mat/idx z0 1)
-        S11 (mat/idx S 0 0)
-        S12 (mat/idx S 0 1)
-        S21 (mat/idx S 1 0)
-        S22 (mat/idx S 1 1)
-        denom  (* 2 S21 (sqrt (* (cmplx/real z01) (cmplx/real z02))))]
-    (mat/matrix [[(/ (+ (* (+ (cmplx/conjugate z01) (* S11 z01)) (- 1 S22)) (* S12 S21 z01)) denom)
-                  (/ (- (* (+ (cmplx/conjugate z01) (* S11 z01)) (+ (cmplx/conjugate z02) (* S22 z02)))
-                        (* S12 S21 z01 z02)) denom)]
-                 [(/ (- (* (- 1 S11) (- 1 S22)) (* S21 S12)) denom)
-                  (/ (+ (* (- 1 S11) (+ (cmplx/conjugate z02) (* S22 z02))) (* S12 S21 z02)) denom)]])))
+        [s11 s12 s21 s22] (-destructure-two-port S)
+        denom  (* 2 s21 (sqrt (* (cmplx/real z01) (cmplx/real z02))))]
+    (mat/matrix [[(/ (+ (* (+ (cmplx/conjugate z01) (* s11 z01)) (- 1 s22)) (* s12 s21 z01)) denom)
+                  (/ (- (* (+ (cmplx/conjugate z01) (* s11 z01)) (+ (cmplx/conjugate z02) (* s22 z02)))
+                        (* s12 s21 z01 z02)) denom)]
+                 [(/ (- (* (- 1 s11) (- 1 s22)) (* s21 s12)) denom)
+                  (/ (+ (* (- 1 s11) (+ (cmplx/conjugate z02) (* s22 z02))) (* s12 s21 z02)) denom)]])))
 
 (defn -h2s [H z0]
   (let [z01 (mat/idx z0 0)
         z02 (mat/idx z0 1)
-        h11 (mat/idx H 0 0)
-        h12 (mat/idx H 0 1)
-        h21 (mat/idx H 1 0)
-        h22 (mat/idx H 1 1)
+        [h11 h12 h21 h22] (-destructure-two-port H)
         denom (- (* (+ z01 h11) (+ 1 (* h22 z02))) (* h12 h21 z02))]
     (mat/matrix [[(/ (- (* (- h11 (cmplx/conjugate z01)) (+ 1 (* h22 z02))) (* h12 h21 z02))
                      denom)
@@ -162,10 +158,7 @@
 (defn -s2h [S z0]
   (let [z01 (mat/idx z0 0)
         z02 (mat/idx z0 1)
-        s11 (mat/idx S 0 0)
-        s12 (mat/idx S 0 1)
-        s21 (mat/idx S 1 0)
-        s22 (mat/idx S 1 1)
+        [s11 s12 s21 s22] (-destructure-two-port S)
         denom (+ (* (- 1 s11) (+ (cmplx/conjugate z02) (* s22 z02))) (* s12 s21 z02))]
     (mat/matrix [[(/ (- (* (+ (cmplx/conjugate z01) (* s11 z01)) (+ (cmplx/conjugate z02) (* s22 z02))) (* s12 s21 z01 z02))
                      denom)
@@ -195,15 +188,9 @@
    :t {:from -t2s :to -s2t}})
 
 (defn to-s [{:keys [from data z0]}]
-  (when (or (= from :abcd)
-            (= from :H))
-    (assert (two-port? data) "Data must be two port"))
   (-fix-z0-and-broadcast (:from (from -param-fn)) data z0))
 
 (defn from-s [{:keys [to data z0]}]
-  (when (or (= to :abcd)
-            (= to :H))
-    (assert (two-port? data) "Data must be two port"))
   (-fix-z0-and-broadcast (:to (to -param-fn)) data z0))
 
 (defn convert [input]
