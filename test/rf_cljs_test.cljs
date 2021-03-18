@@ -106,8 +106,27 @@
 
 ; Touchstone files 
 
-(def test-net {:f
-               :s (:s param-map)
-               :z0 50
-               :ncm})
+(def test-network {:name "Test Network"
+                   :f {:start 1 :stop 5 :n-pts 2 :unit :ghz}
+                   :s (:s param-map)
+                   :z0 50
+                  ;;  :ncm
+                   })
 
+(def touchstone-file-list ["test\\touchstone_test_files\\S_DB_50ohm_GHz.s2p"
+                           "test\\touchstone_test_files\\S_DB_75ohm_GHz.s2p"
+                           "test\\touchstone_test_files\\S_MA_50ohm_GHz.s2p"
+                           "test\\touchstone_test_files\\S_MA_75ohm_GHz.s2p"
+                           "test\\touchstone_test_files\\S_RI_50ohm_GHz.s2p"
+                           "test\\touchstone_test_files\\S_RI_75ohm_GHz.s2p"
+                           "test\\touchstone_test_files\\Y_DB_50ohm_MHz.s2p"
+                           "test\\touchstone_test_files\\Y_MA_50ohm_MHz.s2p"
+                           "test\\touchstone_test_files\\Y_RI_50ohm_MHz.s2p"
+                           "test\\touchstone_test_files\\Z_DB_50ohm_kHz.s2p"
+                           "test\\touchstone_test_files\\Z_MA_50ohm_kHz.s2p"
+                           "test\\touchstone_test_files\\Z_RI_50ohm_kHz.s2p"])
+
+
+;; (defn test-touchstone-read
+;;   (for [fname touchstone-file-list]
+;;     (is ())))
