@@ -202,13 +202,6 @@
   [shape value]
   (matrix (-fill shape value)))
 
-(defn smaller [x y]
-  (mathjs/smaller x y))
-
-(defn larger
-  [x y]
-  (mathjs/larger x y))
-
 (defn any
   "Returns `true` if any of the elements of `mathjs/matrix m` are true."
   [m]
