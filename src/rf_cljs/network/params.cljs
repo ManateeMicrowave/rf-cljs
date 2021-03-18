@@ -35,7 +35,7 @@
   (let [[_ n _] (mat/shape data)]
     (= n 2)))
 
-(defn fix-z0-shape [z0 [a b c]]
+(defn -fix-z0-shape [z0 [a b c]]
   (if (nil? c)
     (assert (= a b) "Matrix must be square")
     (assert (= b c) "Matrix must be sqaure"))
@@ -47,7 +47,7 @@
       z0)
     (* z0 (mat/ones [b]))))
 
-(defn internal-external-partition
+(defn -internal-external-partition
   "Partition the matrix of 2n ports into internal-external blocks
   Returns [ee ei ie ii]
   http://www.microwave.fr/publications/151.pdf"
@@ -67,7 +67,7 @@
 
 (defn -fix-z0-and-broadcast [f data z0]
   (let [shape (mat/shape data)
-        z0 (fix-z0-shape z0 shape)]
+        z0 (-fix-z0-shape z0 shape)]
     (case (count shape)
       2 (f data z0)
       3 (mat/broadcast data #(f % z0) 0))))
@@ -177,12 +177,12 @@
                      denom)]])))
 
 (defn -t2s [T]
-  (let [[T11 T12 T21 T22] (internal-external-partition T)]
+  (let [[T11 T12 T21 T22] (-internal-external-partition T)]
     (mat/matrix [[(* T12 (mat/inv T22)) (- T11 (* T12 (mat/inv T22) T21))]
                  [(mat/inv T22) (* -1 (mat/inv T22) T21)]])))
 
 (defn -s2t [S]
-  (let [[S11 S12 S21 S22] (internal-external-partition S)]
+  (let [[S11 S12 S21 S22] (-internal-external-partition S)]
     (mat/matrix [[(- S12 (* S11 (mat/inv S21) S22)) (* S11 (mat/inv S21))]
                  [(* (mat/inv (- S21)) S22) (mat/inv S21)]])))
 
