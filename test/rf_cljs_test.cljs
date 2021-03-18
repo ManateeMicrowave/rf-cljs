@@ -1,31 +1,19 @@
 (ns rf-cljs-test
+  (:refer-clojure :exclude [+ - * / < > <= >=])
   (:require
    [cljs.test :refer-macros [deftest is testing]]
+   [rf-cljs.math.operations :refer [+ - * / abs sqrt < > <= >=]]
    [rf-cljs.networks.network :as network]
    [rf-cljs.math.complex :as cplx]
    [rf-cljs.math.matrix :as mat]))
 
-(def networks [:abcd :z :y :s :t :h])
-(def test-network-size [25 2 2])
 (def eps 1e-10) ; epsilon used for floating point equality comparisons
 
-(deftest round-trip-network
-  (let [data (mat/random-complex test-network-size)]
-    (doseq [neta networks
-            netb networks
-            z0 [50 (cplx/complex 50 75)]
-            :when (not= neta netb)
-            :let [to (network/convert {:from neta :to netb :data data :z0 z0})
-                  from (network/convert {:from netb :to neta :data to :z0 z0})]]
-      (testing (str "Roundtrip " neta " -> " netb " -> " neta ". Z0 = " z0)
-        (is (mat/equals data from eps))))))
+; Network Tests 
 
-(deftest renomalize
-  (let [s (mat/random-complex test-network-size)]
-    (testing "Renomalize s to 75 and back"
-      (is (mat/equals s (network/renormalize (network/renormalize s 50 75) 75 50)) eps))
-    (testing "Renomalize complex and back"
-      (is (mat/equals s (network/renormalize (network/renormalize s (cplx/complex 1 1) 50) 50 (cplx/complex 1 1)) eps)))))
+(def networks [:abcd :z :y :s :t :h])
+
+(def test-network-size [1 2 2])
 
 (def param-map
   "Map of parameter keywords to parameters. 2x2 parameter matrix is repeated twice
@@ -42,6 +30,24 @@
                         [(cplx/complex 2 0) (cplx/complex -0.02 0)]]])
    :t     (mat/matrix [[[(cplx/complex -1 -1) (cplx/complex -0.5 -0.5)]
                         [(cplx/complex 0 -1) (cplx/complex -0.5 -0.5)]]])})
+
+(deftest round-trip-network
+  (let [data (mat/random-complex test-network-size)]
+    (doseq [neta networks
+            netb networks
+            z0 [50 [50 (cplx/complex 50 75)]]
+            :when (not= neta netb)
+            :let [to (network/convert {:from neta :to netb :data data :z0 z0})
+                  from (network/convert {:from netb :to neta :data to :z0 z0})]]
+      (testing (str "Roundtrip " neta " -> " netb " -> " neta ". Z0 = " z0)
+        (is (mat/equals data from eps))))))
+
+(deftest renomalize
+  (let [s (mat/random-complex test-network-size)]
+    (testing "Renomalize s to 75 and back"
+      (is (mat/equals s (network/renormalize (network/renormalize s 50 75) 75 50)) eps))
+    (testing "Renomalize complex and back"
+      (is (mat/equals s (network/renormalize (network/renormalize s (cplx/complex 1 1) 50) 50 (cplx/complex 1 1)) eps)))))
 
 (deftest to-s-tests
   (doseq [net networks]
@@ -72,3 +78,12 @@
           from (network/convert {:from :s :to net :data to :z0 z0})]
       (testing (str "Roundtrip " nports "port s -> " net " -> s. Z0 = " z0)
         (is (mat/equals data from eps))))))
+
+; Matrix Function Tests
+
+(def m (mat/matrix [[[1 2] [3 4]] [[5 6] [7 8]]]))
+(def true_122 (mat/fill [1 2 2] true))
+
+(deftest test-single-arity-<
+  (testing "Testing single-arity <"
+    (is (< m (+ 1 m)) true_122)))

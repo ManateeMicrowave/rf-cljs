@@ -1,7 +1,7 @@
 (ns rf-cljs.networks.network
-  (:refer-clojure :exclude [+ - * /])
+  (:refer-clojure :exclude [+ - * / < > <= >=])
   (:require
-   [rf-cljs.math.operations :refer [+ - * / abs sqrt]]
+   [rf-cljs.math.operations :refer [+ - * / abs sqrt < > <= >=]]
    [rf-cljs.math.complex :as cmplx]
    [rf-cljs.math.matrix :as mat]
    ["mathjs" :as mathjs]))
@@ -37,8 +37,9 @@
 (defn fix-z0-shape [z0 nports]
   (if (or (mat/matrix? z0)
           (vector? z0))
-    (let [z0 (mat/matrix [z0])]
-      (assert (= [nports] (mat/shape z0)) "(count z0) must equal nports")
+    (let [z0 (mat/matrix z0)]
+      (assert (= [nports] (mat/shape z0)) (str "(count z0) must equal nports:\n [nports]: "
+                                               [nports] "\n(mat/shape z0): " (mat/shape z0)))
       z0)
     (* z0 (mat/ones [nports]))))
 
@@ -76,6 +77,7 @@
                         F (mat/diag (-> (cmplx/real z0)
                                         abs
                                         sqrt
+                                        mat/dot-divide
                                         (* 0.5)))]
                     (* F (- Z (mat/ctranspose G)) (mat/inv (+ Z G)) (mat/inv F)))))))
 
@@ -159,6 +161,7 @@
                         F (mat/diag (-> (cmplx/real z0)
                                         abs
                                         sqrt
+                                        mat/dot-divide
                                         (* 0.5)))]
                     (* (mat/inv F) (mat/inv (- (mat/eye nportsa) S)) (+ (* S G) (mat/ctranspose G)) F))))))
 
@@ -171,6 +174,7 @@
                   (let [G (mat/diag z0)
                         F (mat/diag (-> (cmplx/real z0)
                                         abs
+                                        sqrt
                                         mat/dot-divide
                                         (* 0.5)))]
                     (* (mat/inv F) (mat/inv (+ (* S G) (cmplx/conjugate G))) (- (mat/eye nportsa) S) F))))))
@@ -251,8 +255,9 @@
 (def touchstone-formats
   "Mapping of two-letter `str` to function taking two floats and returning complex number"
   {:RI #(cmplx/complex %1 %2)
-   :MA #([R I] (cmplx/complex R I))
-   :DB #([R I] (cmplx/complex R I))})
+  ;;  :MA #(cmplx/complex %1 %2)
+  ;;  :DB #(cmplx/complex %1 %2)
+   })
 
 (defn read-touchstone-contents
   "Takes a string `file-contents` and outputs a map with the following members:
