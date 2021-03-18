@@ -51,7 +51,6 @@
 (defn max-stab-gain
   "Maximum stable gain"
   [s]
-  (-per-f #(let [[_ S21 S12 _] (-destructure-s %)
-                 K (stab-fact %)]
-             (* (/ (* 2 K)) (/ (abs S21) (abs S12))))
+  (-per-f #(let [[_ S21 S12 _] (-destructure-s %)]
+             (/ (abs S21) (abs S12)))
           s))
