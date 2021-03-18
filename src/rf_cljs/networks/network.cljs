@@ -47,7 +47,7 @@
   http://www.microwave.fr/publications/151.pdf"
   [data]
   (let [[m n] (mat/shape data)
-        part-n (dec (quot n 2))]
+        part-n (quot n 2)]
     (assert (= m n) "Matrix must be square")
     (assert (= 0 (mod m 2)) "Matrix must be 2nx2n")
     (if (= n 2)
@@ -55,10 +55,10 @@
        (mat/idx data 0 1)
        (mat/idx data 1 0)
        (mat/idx data 1 1)]
-      [(mat/idx data [0 part-n] [0 part-n])
-       (mat/idx data [0 part-n] [(inc part-n) (dec n)])
-       (mat/idx data [(inc part-n) (dec n)] [0 part-n])
-       (mat/idx data [(inc part-n) (dec n)] [(inc part-n) (dec n)])])))
+      [(mat/idx data (range part-n) (range part-n))
+       (mat/idx data (range part-n) (range part-n n))
+       (mat/idx data (range part-n n) (range part-n))
+       (mat/idx data (range part-n n) (range part-n n))])))
 
 (defmulti to-s :from)
 
