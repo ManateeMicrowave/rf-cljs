@@ -33,6 +33,7 @@
 ;;   (matrix [[N 0] [0 (/ N)]]))
 
 
+
 (defn fix-z0-shape [z0 nports]
   (if (or (mat/matrix? z0)
           (vector? z0))
@@ -245,6 +246,25 @@
   (mat/matrix (for [i (range (first (mat/shape s)))
                     :let [s (mat/squeeze (mat/idx s i :all :all))]]
                 (- s (mat/transpose s)))))
+
+; Touchstone Functions
+(def touchstone-formats
+  "Mapping of two-letter `str` to function taking two floats and returning complex number"
+  {:RI #(cmplx/complex %1 %2)
+   :MA #([R I] (cmplx/complex R I))
+   :DB #([R I] (cmplx/complex R I))})
+
+(defn read-touchstone-contents
+  "Takes a string `file-contents` and outputs a map with the following members:
+   {
+      :format <`str` representing how the two columns of floating point numbers are to be 
+              combined to make one complex number>
+      :param <`char` representing the type of parameter read>
+      :data <n-freqs x n-ports x n-ports x 2 mathjs/matrix>
+      :f <n-nfreqs
+
+   }"
+  [file-contents])
 
 (defn passive? [])
 
