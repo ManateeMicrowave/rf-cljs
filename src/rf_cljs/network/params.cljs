@@ -32,7 +32,6 @@
 ;;   (matrix [[N 0] [0 (/ N)]]))
 
 
-
 (defn fix-z0-shape [z0 nports]
   (if (or (mat/matrix? z0)
           (vector? z0))
@@ -240,19 +239,3 @@
    referenced to `z0-desired`."
   [s z0-current z0-desired]
   (to-s {:from :z :data (from-s {:to :z :data s :z0 z0-current}) :z0 z0-desired}))
-
-(defn passivity [])
-
-(defn reciprocity [s]
-  (mat/matrix (for [i (range (first (mat/shape s)))
-                    :let [s (mat/squeeze (mat/idx s i :all :all))]]
-                (- s (mat/transpose s)))))
-
-(defn passive? [])
-
-(defn active? [s])
-
-(defn reciprocal? [])
-
-(defn stab-fact [s]
-  (assert (= [])))
