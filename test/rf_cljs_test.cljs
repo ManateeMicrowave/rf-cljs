@@ -85,8 +85,29 @@
 (def m (mat/matrix [[[1 2] [3 4]] [[5 6] [7 8]]]))
 (def true_122 (mat/fill [1 2 2] true))
 
-(deftest test-single-arity-<
-  (testing "Testing single-arity <"
-    (is (< m (+ 1 m)) true_122)))
+;   Logical Comparison Operators
+(deftest gt-unary
+  (is (< m) true_122))
 
-(read-file "touchstone_test_files/blah.txt")
+(deftest gt-binary
+  (is (< m (+ 1 m)) true_122))
+
+(deftest gt-N-arity
+  (is (< m (+ 1 m) (+ 2 m)) true_122))
+
+(deftest lt-unary
+  (is (> m) true_122))
+
+(deftest lt-binary
+  (is (> (+ 1 m) m) true_122))
+
+(deftest lt-N-arity
+  (is (> (+ 2 m) (+ 1 m) m) true_122))
+
+; Touchstone files 
+
+(def test-net {:f
+               :s (:s param-map)
+               :z0 50
+               :ncm})
+
