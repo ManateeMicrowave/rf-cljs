@@ -31,6 +31,9 @@
 ;; (defmethod abcd :transformer [{:keys [N]}]
 ;;   (matrix [[N 0] [0 (/ N)]]))
 
+(defn two-port? [data]
+  (let [[_ na nb] (mat/shape data)]
+    (= na nb 2)))
 
 (defn fix-z0-shape [z0 nports]
   (if (or (mat/matrix? z0)
@@ -99,7 +102,7 @@
         z0 (fix-z0-shape z0 nportsa)
         z01 (mat/idx z0 0)
         z02 (mat/idx z0 1)]
-    (assert (= nportsa nportsb 2) "ABCD parameters must have two ports")
+    (assert (two-port? data) "ABCD parameters must have two ports")
     (mat/matrix (for [i (range nfreqs)]
                   (let [A (mat/idx data i 0 0)
                         B (mat/idx data i 0 1)
@@ -120,7 +123,7 @@
         z0 (fix-z0-shape z0 nportsa)
         z01 (mat/idx z0 0)
         z02 (mat/idx z0 1)]
-    (assert (= nportsa nportsb 2) "H parameters must have two ports")
+    (assert (two-port? data) "H parameters must have two ports")
     (mat/matrix (for [i (range nfreqs)]
                   (let [h11 (mat/idx data i 0 0)
                         h12 (mat/idx data i 0 1)
@@ -183,7 +186,7 @@
         z0 (fix-z0-shape z0 nportsa)
         z01 (mat/idx z0 0)
         z02 (mat/idx z0 1)]
-    (assert (= nportsa nportsb 2) "ABCD parameters must have two ports")
+    (assert (two-port? data) "ABCD parameters must have two ports")
     (mat/matrix (for [i (range nfreqs)]
                   (let [S11 (mat/idx data i 0 0)
                         S12 (mat/idx data i 0 1)
@@ -201,7 +204,7 @@
         z0 (fix-z0-shape z0 nportsa)
         z01 (mat/idx z0 0)
         z02 (mat/idx z0 1)]
-    (assert (= nportsa nportsb 2) "H parameters must have two ports")
+    (assert (two-port? data) "H parameters must have two ports")
     (mat/matrix (for [i (range nfreqs)]
                   (let [s11 (mat/idx data i 0 0)
                         s12 (mat/idx data i 0 1)

@@ -1,4 +1,5 @@
-(ns rf-cljs.network.metrics)
+(ns rf-cljs.network.metrics
+  (:require [rf-cljs.network.params :as params]))
 
 (defn passivity [])
 
@@ -14,4 +15,4 @@
 (defn reciprocal? [])
 
 (defn stab-fact [s]
-  (assert (= [])))
+  (assert (params/two-port? s) "S-Parameters must be two port"))

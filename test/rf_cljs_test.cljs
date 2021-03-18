@@ -88,5 +88,3 @@
 (deftest test-single-arity-<
   (testing "Testing single-arity <"
     (is (< m (+ 1 m)) true_122)))
-
-(read-file "touchstone_test_files/blah.txt")
