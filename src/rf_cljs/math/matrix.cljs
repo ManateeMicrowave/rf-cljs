@@ -258,6 +258,6 @@
   ([x y]
    (mathjs/deepEqual x y))
   ([x y eps]
-   (every? true? (to-vec (flat (< (abs (- x y)) (+ (zeros (shape x)) eps)))))))
+   (all (< (abs (- x y)) (+ (zeros (shape x)) eps)))))
 
 ;; There are indeed more, but I'm getting bored
