@@ -18,7 +18,7 @@
             (cplx/complex? (first items))
             (boolean? (first items)))
       :mat
-      (when (vector? (first items))
+      (when (seqable? (first items))
         (if (matrix? (first (first items)))
           :block
           :mat)))))
