@@ -14,5 +14,22 @@
 
 (defn reciprocal? [])
 
-(defn stab-fact [s]
+(defn stab-fact
+  "Stability factor (K)"
+  [s]
+  (assert (params/two-port? s) "S-Parameters must be two port"))
+
+(defn stab-meas
+  "Stability measure (delta)"
+  [s]
+  (assert (params/two-port? s) "S-Parameters must be two port"))
+
+(defn gmax
+  "Maximum available gain"
+  [s]
+  (assert (params/two-port? s) "S-Parameters must be two port"))
+
+(defn msg
+  "Maximum stable gain"
+  [s]
   (assert (params/two-port? s) "S-Parameters must be two port"))

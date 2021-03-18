@@ -146,11 +146,53 @@
   [v & k]
   (apply mathjs/diag (matrix v) k))
 
-(defn apply-axis [m dim f]
-  (mathjs/apply m dim f))
+;(broadcast m f)        apply f to every element in m
+;(broadcast m f 0)      apply f across dimension
+                      ; so if m is [i j k] dim, f accepts [j k] and returns [j k]
+;(broadcast m f [0 2])  So if m is [i j k] dim, f accets [j] and returns [j]
 
-(defn broadcast [a f]
-  (mathjs/map a f))
+(defn -vec-remove
+  "Remove items as `pos` from `coll`"
+  [pos coll]
+  (vec (concat (subvec coll 0 pos) (subvec coll (inc pos)))))
+
+(defn -type-broadcast [_ _ & dims]
+  (cond
+    (nil? dims) :all
+    (number? (first dims)) :single
+    (seqable? (first dims)) :many))
+
+(defmulti broadcast
+  "Takes a matrix `m` and applies `f`
+  By default, this fill apply `f` to every entry in `m`
+  `dims` will apply the function to slices down each dim in `dims`"
+  #'-type-broadcast)
+
+(defmethod broadcast
+  :all
+  [m f & _]
+  (mathjs/map m f))
+
+(defmethod broadcast
+  :single
+  [m f & [apply-dim]]
+  (let [dims (shape m)]
+    (matrix (for [i (range (nth dims apply-dim))
+                  :let [idxs (into [] (take (count dims) (repeat :all)))
+                        idxs (assoc idxs apply-dim i)
+                        slice (reshape (apply idx m idxs) (-vec-remove apply-dim dims))]]
+              (f slice)))))
+
+; (broadcast m f [1 3]) for m = [i j k l] f will accept [i k]
+ ;; (defmethod broadcast
+ ;;  :many
+ ;;  [m f & [apply-dims]]
+ ;;  (let [dims (shape m)]
+ ;;    (matrix (for [i (range (nth dims dim))
+ ;;                  :let [idxs (into [] (take (count dims) (repeat :all)))
+ ;;                        idxs (assoc idxs dim i)
+ ;;                        slice (reshape (apply idx m idxs) (-vec-remove dim dims))]]
+ ;;              (f slice)))))
 
 (defn col [m idx]
   (mathjs/column m idx))
