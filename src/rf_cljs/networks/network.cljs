@@ -251,3 +251,6 @@
 (defn active? [s])
 
 (defn reciprocal? [])
+
+(defn stab-fact [s]
+  (assert (= [])))
