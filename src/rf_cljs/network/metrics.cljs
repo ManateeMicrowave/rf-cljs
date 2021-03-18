@@ -23,31 +23,27 @@
     3 (mat/broadcast m f 0)))
 
 (defn -destructure-s [s]
+  (assert (params/two-port? s) "S-Parameters must be two port")
   [(mat/idx s 0 0) (mat/idx s 0 1)
    (mat/idx s 1 0) (mat/idx s 1 1)])
 
 (defn delta
   [s]
-  (assert (params/two-port? s) "S-Parameters must be two port")
-  (-per-f #((let [[S11 S12 S21 S22] (-destructure-s s)]
-              (- (* S11 S22) (* S12 S21))))
+  (-per-f #(let [[S11 S12 S21 S22] (-destructure-s %)]
+             (- (* S11 S22) (* S12 S21)))
           s))
 
 (defn stab-fact
   "Stability factor (K)"
   [s]
-  (assert (params/two-port? s) "S-Parameters must be two port")
-  (-per-f #((let [[S11 S12 S21 S22] (-destructure-s s)]
-              (/ (- 1 (square (abs S11)) (square (abs S22)) (square (abs (delta s))))
-                 (* 2 (abs (* S21 S12))))))
+  (-per-f #(let [[S11 S12 S21 S22] (-destructure-s %)]
+             (/ (- 1 (square (abs S11)) (square (abs S22)) (square (abs (delta %))))
+                (* 2 (abs (* S21 S12)))))
           s))
 
-(defn gmax
-  "Maximum available gain"
-  [s]
-  (assert (params/two-port? s) "S-Parameters must be two port"))
+(defn max-avail-gain
+  [s])
 
-(defn msg
+(defn max-stab-gain
   "Maximum stable gain"
-  [s]
-  (assert (params/two-port? s) "S-Parameters must be two port"))
+  [s])
