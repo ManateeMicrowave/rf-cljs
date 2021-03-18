@@ -1,5 +1,6 @@
 (ns rf-cljs-test
   (:refer-clojure :exclude [+ - * / < > <= >=])
+  (:require-macros [load-files :refer [read-file]])
   (:require
    [cljs.test :refer-macros [deftest is testing]]
    [rf-cljs.math.operations :refer [+ - * / abs sqrt < > <= >=]]
@@ -87,3 +88,5 @@
 (deftest test-single-arity-<
   (testing "Testing single-arity <"
     (is (< m (+ 1 m)) true_122)))
+
+(read-file "touchstone_test_files/blah.txt")
