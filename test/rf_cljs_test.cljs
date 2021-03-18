@@ -1,31 +1,31 @@
 (ns rf-cljs-test
-  (:refer-clojure :exclude [+ - * / < >])
   (:require
    [cljs.test :refer-macros [deftest is testing]]
    [rf-cljs.networks.network :as network]
-   [rf-cljs.math.operations :refer [abs + - * /]]
    [rf-cljs.math.complex :as cplx]
    [rf-cljs.math.matrix :as mat]))
 
 (def networks [:abcd :z :y :s :t :h])
-(def test-network-size [100 2 2])
-(def eps 1e-12) ; epsilon used for floating point equality comparisons
+(def test-network-size [25 2 2])
+(def eps 1e-10) ; epsilon used for floating point equality comparisons
 
 (deftest round-trip-network
   (let [data (mat/random-complex test-network-size)]
     (doseq [neta networks
             netb networks
-            :let [z0 (cplx/complex 1 1)
-                  to (network/convert {:from neta :to netb :data data :z0 z0})
+            z0 [50 (cplx/complex 50 75)]
+            :when (not= neta netb)
+            :let [to (network/convert {:from neta :to netb :data data :z0 z0})
                   from (network/convert {:from netb :to neta :data to :z0 z0})]]
-      (testing (str "Roundtrip " neta " -> " netb " -> " neta)
+      (testing (str "Roundtrip " neta " -> " netb " -> " neta ". Z0 = " z0)
         (is (mat/equals data from eps))))))
 
 (deftest renomalize
-  (let [s (mat/random-complex test-network-size)
-        z75 (network/renormalize s 50 75)]
+  (let [s (mat/random-complex test-network-size)]
     (testing "Renomalize s to 75 and back"
-      (is (mat/equals s (network/renormalize z75 75 50)) eps))))
+      (is (mat/equals s (network/renormalize (network/renormalize s 50 75) 75 50)) eps))
+    (testing "Renomalize complex and back"
+      (is (mat/equals s (network/renormalize (network/renormalize s (cplx/complex 1 1) 50) 50 (cplx/complex 1 1)) eps)))))
 
 (def param-map
   "Map of parameter keywords to parameters. 2x2 parameter matrix is repeated twice
@@ -52,3 +52,23 @@
   (doseq [net networks]
     (testing (str net)
       (is (mat/equals (net param-map) (network/from-s {:to net :data (:s param-map) :z0 50}) eps)))))
+
+(deftest even-port
+  (doseq [nports [4 6 8]
+          :let [data (mat/random-complex [25 nports nports])]
+          net [:s :y :z :t]
+          z0 [50 (cplx/complex 50 75)]]
+    (let [to (network/convert {:from net :to :s :data data :z0 z0})
+          from (network/convert {:from :s :to net :data to :z0 z0})]
+      (testing (str "Roundtrip s -> " net " -> s. Z0 = " z0)
+        (is (mat/equals data from eps))))))
+
+(deftest odd-port
+  (doseq [nports [3 6 9]
+          :let [data (mat/random-complex [25 nports nports])]
+          net [:s :y :z]
+          z0 [50 (cplx/complex 50 75)]]
+    (let [to (network/convert {:from net :to :s :data data :z0 z0})
+          from (network/convert {:from :s :to net :data to :z0 z0})]
+      (testing (str "Roundtrip s -> " net " -> s. Z0 = " z0)
+        (is (mat/equals data from eps))))))
