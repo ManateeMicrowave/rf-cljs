@@ -1,11 +1,10 @@
-(ns rf-cljs.network.network
+(ns rf-cljs.network.params
   (:refer-clojure :exclude [+ - * / < > <= >=])
   (:require
    [rf-cljs.math.operations :refer [+ - * / abs sqrt < > <= >=]]
    [rf-cljs.math.complex :as cmplx]
    [rf-cljs.math.matrix :as mat]
    ["mathjs" :as mathjs]))
-
 
 ;; (defmulti abcd :type)
 
@@ -232,10 +231,8 @@
 
 (defn convert [input]
   (if (= (:from input) (:to input))
-    (:data input)
-    (if (= (:to input) :s)
-      (to-s input)
-      (from-s (assoc input :data (to-s input))))))
+    (:data input) ;give back input
+    (from-s (assoc input :data (to-s input)))))
 
 (defn renormalize
   "Takes `s` an NxMxM matrix of s-parameters referenced to 
@@ -250,26 +247,6 @@
   (mat/matrix (for [i (range (first (mat/shape s)))
                     :let [s (mat/squeeze (mat/idx s i :all :all))]]
                 (- s (mat/transpose s)))))
-
-; Touchstone Functions
-(def touchstone-formats
-  "Mapping of two-letter `str` to function taking two floats and returning complex number"
-  {:RI #(cmplx/complex %1 %2)
-  ;;  :MA #(cmplx/complex %1 %2)
-  ;;  :DB #(cmplx/complex %1 %2)
-   })
-
-(defn read-touchstone-contents
-  "Takes a string `file-contents` and outputs a map with the following members:
-   {
-      :format <`str` representing how the two columns of floating point numbers are to be 
-              combined to make one complex number>
-      :param <`char` representing the type of parameter read>
-      :data <n-freqs x n-ports x n-ports x 2 mathjs/matrix>
-      :f <n-nfreqs
-
-   }"
-  [file-contents])
 
 (defn passive? [])
 
