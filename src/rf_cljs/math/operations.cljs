@@ -1,5 +1,5 @@
 (ns rf-cljs.math.operations
-  (:refer-clojure :exclude [* / + - fix mod])
+  (:refer-clojure :exclude [* / + - fix mod < > <= >=])
   (:require
    ["mathjs" :as mathjs]))
 
@@ -20,6 +20,44 @@
 (defn -
   ([x] (mathjs/unaryMinus x))
   ([x y & rest] (mathjs/subtract x (apply + y rest))))
+
+(defn <
+  ([x] true)
+  ([x y] (mathjs/smaller x y))
+  ([x y & rest] (if (mathjs/smaller x y)
+                  (if (next rest)
+                    (recur y (first rest) (next rest))
+                    (mathjs/smaller y (first rest)))
+                  false)))
+
+(defn <=
+  ([x] true)
+  ([x y] (mathjs/smallerEq x y))
+  ([x y & rest] (if (mathjs/smallerEq x y)
+                  (if (next rest)
+                    (recur y (first rest) (next rest))
+                    (mathjs/smallerEq y (first rest)))
+                  false)))
+
+(defn >
+  ([x] true)
+  ([x y] (mathjs/larger x y))
+  ([x y & rest]
+   (if (mathjs/larger x y)
+     (if (next rest)
+       (recur y (first rest) (next rest))
+       (mathjs/larger y (first rest)))
+     false)))
+
+(defn >=
+  ([x] true)
+  ([x y] (mathjs/largerEq x y))
+  ([x y & rest]
+   (if (mathjs/largerEq x y)
+     (if (next rest)
+       (recur y (first rest) (next rest))
+       (mathjs/largerEq y (first rest)))
+     false)))
 
 (defn abs [x]
   (mathjs/abs x))

@@ -1,11 +1,13 @@
 (ns rf-cljs.math.matrix
-  (:refer-clojure :exclude [+ - * / < >])
+  (:refer-clojure :exclude [+ - * / <])
   (:require ["mathjs" :as mathjs]
             [rf-cljs.math.complex :as cplx]
-            [rf-cljs.math.operations :refer [abs + - * /]]
+            [rf-cljs.math.operations :refer [abs + - * / <]]
             [cljs-bean.core :refer [->js ->clj]]))
 
-(defn matrix? [m]
+(defn matrix?
+  "Returns `true` if `m` is a mathjs Matrix"
+  [m]
   (= (type m) mathjs/Matrix))
 
 (defn -matrix-type [items]
@@ -21,15 +23,26 @@
           :block
           :mat)))))
 
-(defmulti matrix #'-matrix-type)
+(defmulti matrix
+  "Constructor for a mathjs matrix
+  The constructor takes in a vec or a seq to build a n-dimensional matrix
 
-(defn shape [m]
+  In the specific case a a 2D matrix, other matrices can be passed in to form a block matrix"
+  #'-matrix-type)
+
+(defn shape
+  "Returns a vector of the shape of `m`"
+  [m]
   (->clj (. m size)))
 
-(defn reshape [m shape]
+(defn reshape
+  "Reshapes `m` into `shape`"
+  [m shape]
   (. m reshape (->js shape)))
 
-(defn zeros [shape]
+(defn zeros
+  "Generates a matrix of zeros with `shape`"
+  [shape]
   (mathjs/zeros (matrix shape)))
 
 (defmethod matrix
@@ -74,13 +87,29 @@
           (. out-mat subset idxs m))
         out-mat))))
 
-(defn to-vec [m]
+(defn to-vec
+  "Converts a mathjs matrix into a clojure nested vector. Note, this only
+  works for types in CLJS core, i.e. not complex"
+  [m]
   (->clj (. m toArray)))
 
-(defn squeeze [m]
+(defn squeeze
+  "Removes extra singular dimensions
+  `(squeeze (matrix [[[1]]]))` = `(matrix [1])`"
+  [m]
   (mathjs/squeeze m))
 
-(defn idx [m & idxs]
+(defn idx
+  "Retrieves the value(s) of `m` at `idxs`
+
+  There must be an `idx` per dimension of `m`.
+  `idxs` can be iterables that will retrieve those slices from
+  the `n`th dimension (where `n` is the position in the function call)
+
+  The `:all` keyword will slice all available values for the dimension
+  in that position.
+  "
+  [m & idxs]
   (let [dims (shape m)
         idxs (for [i (range (count idxs))
                    :let [ix (nth idxs i)]]
@@ -89,22 +118,32 @@
                  ix))]
     (. m subset (apply mathjs/index (map ->js idxs)))))
 
-(defn dot-times [x y]
+(defn dot-times
+  "Element-wise multiplication"
+  [x y]
   (mathjs/dotMultiply x y))
 
 (defn dot-divide
+  "Element-wise division"
   ([x]
    (mathjs/dotDivide 1 x))
   ([x y]
    (mathjs/dotDivide x y)))
 
-(defn dot-pow [x y]
+(defn dot-pow
+  "Element-wise power "
+  [x y]
   (mathjs/dotPow x y))
 
-(defn dot-equals [x y]
+(defn dot-equals
+  "Element-wise equality"
+  [x y]
   (mathjs/equal x y))
 
-(defn diag [v & k]
+(defn diag
+  "Generate a dense, diagonal matrix from vector `v` on optional
+  diagonal `k` (defaults to the main diagonal)"
+  [v & k]
   (apply mathjs/diag (matrix v) k))
 
 (defn apply-axis [m dim f]
@@ -157,32 +196,11 @@
     (for [_ (range (first shape))]
       (-fill (rest shape) value))))
 
-(defn fill [shape value]
-  "Constructs a new `mathjs/matrix` of shape `shape` with 
+(defn fill
+  "Constructs a new `mathjs/matrix` of shape `shape` with
    `value` for every entry."
+  [shape value]
   (matrix (-fill shape value)))
-
-(defn <
-  ([x] (fill (shape x) true))
-  ([x y] (mathjs/smaller x y))
-  ;; ([x y & more]
-  ;;  (if (mathjs/larger x y)
-  ;;    (if (next more)
-  ;;      (recur y (first more) (next more))
-  ;;      (mathjs/larger y (first more)))
-  ;;    false)) ; TODO make this work if needed
-  )
-
-(defn >
-  ([x] (fill (shape x) true))
-  ([x y] (mathjs/larger x y))
-  ;; ([x y & more]
-  ;;  (if (mathjs/larger x y)
-  ;;    (if (next more)
-  ;;      (recur y (first more) (next more))
-  ;;      (mathjs/larger y (first more)))
-  ;;    false)) ; TODO make this work if needed
-  )
 
 (defn any
   "Returns `true` if any of the elements of `mathjs/matrix m` are true."
@@ -200,5 +218,4 @@
   ([x y eps]
    (every? true? (to-vec (flat (< (abs (- x y)) (+ (zeros (shape x)) eps)))))))
 
-(fill [3] true)
 ;; There are indeed more, but I'm getting bored

@@ -60,7 +60,7 @@
           z0 [50 (cplx/complex 50 75)]]
     (let [to (network/convert {:from net :to :s :data data :z0 z0})
           from (network/convert {:from :s :to net :data to :z0 z0})]
-      (testing (str "Roundtrip s -> " net " -> s. Z0 = " z0)
+      (testing (str "Roundtrip " nports " port s -> " net " -> s. Z0 = " z0)
         (is (mat/equals data from eps))))))
 
 (deftest odd-port
@@ -70,5 +70,5 @@
           z0 [50 (cplx/complex 50 75)]]
     (let [to (network/convert {:from net :to :s :data data :z0 z0})
           from (network/convert {:from :s :to net :data to :z0 z0})]
-      (testing (str "Roundtrip s -> " net " -> s. Z0 = " z0)
+      (testing (str "Roundtrip " nports "port s -> " net " -> s. Z0 = " z0)
         (is (mat/equals data from eps))))))
