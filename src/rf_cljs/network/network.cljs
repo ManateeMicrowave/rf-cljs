@@ -1,4 +1,4 @@
-(ns rf-cljs.networks.network
+(ns rf-cljs.network.network
   (:refer-clojure :exclude [+ - * / < > <= >=])
   (:require
    [rf-cljs.math.operations :refer [+ - * / abs sqrt < > <= >=]]

@@ -1,7 +1,7 @@
 (ns rf-cljs.math.filters
   (:require [rf-cljs.math.utils :as utils]
             [rf-cljs.utils.e-series :as eseries]
-            [rf-cljs.networks.abcd :as abcd]
+            [rf-cljs.network.abcd :as abcd]
             ["mathjs" :as mathjs]))
 
 (defn butterworth

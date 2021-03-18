@@ -4,7 +4,7 @@
   (:require
    [cljs.test :refer-macros [deftest is testing]]
    [rf-cljs.math.operations :refer [+ - * / abs sqrt < > <= >=]]
-   [rf-cljs.networks.network :as network]
+   [rf-cljs.network.network :as network]
    [rf-cljs.math.complex :as cplx]
    [rf-cljs.math.matrix :as mat]))
 
