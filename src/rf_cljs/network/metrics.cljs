@@ -2,7 +2,7 @@
   (:refer-clojure :exclude [+ - * /])
   (:require [rf-cljs.network.params :as params]
             [rf-cljs.math.matrix :as mat]
-            [rf-cljs.math.operations :refer [abs square + - * /]]))
+            [rf-cljs.math.operations :refer [abs square + - * / sqrt]]))
 
 (defn passivity [])
 
@@ -42,8 +42,16 @@
           s))
 
 (defn max-avail-gain
-  [s])
+  [s]
+  (-per-f #(let [[_ S12 S21 _] (-destructure-s %)
+                 K (stab-fact %)]
+             (* (- K (sqrt (- (square K) 1))) (/ (abs S21) (abs S12))))
+          s))
 
 (defn max-stab-gain
   "Maximum stable gain"
-  [s])
+  [s]
+  (-per-f #(let [[_ S21 S12 _] (-destructure-s %)
+                 K (stab-fact %)]
+             (* (/ (* 2 K)) (/ (abs S21) (abs S12))))
+          s))
