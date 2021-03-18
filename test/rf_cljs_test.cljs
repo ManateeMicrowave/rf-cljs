@@ -12,7 +12,7 @@
 
 ; Network Tests 
 
-(def networks [:abcd :z :y :s :t :h])
+(def networks (keys params/-param-fn))
 
 (def test-network-size [1 2 2])
 
