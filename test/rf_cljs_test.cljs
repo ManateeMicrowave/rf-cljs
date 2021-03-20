@@ -1,6 +1,6 @@
 (ns rf-cljs-test
   (:refer-clojure :exclude [+ - * / < > <= >=])
-  (:require-macros [load-files :refer [read-file]])
+  (:require-macros [rf-cljs.misc.embed-resource :refer [embed-resource]])
   (:require
    [cljs.test :refer-macros [deftest is testing]]
    [rf-cljs.math.operations :refer [+ - * / abs sqrt < > <= >=]]

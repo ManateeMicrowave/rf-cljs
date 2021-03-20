@@ -1,21 +1,10 @@
-(ns rf-cljs.network.touchstone)
+(ns rf-cljs.network.touchstone
+  (:require-macros [instaparse.core :refer [defparser]]
+                   [rf-cljs.misc.embed-resource :refer [embed-resource]])
+  (:require [instaparse.core :as insta]))
 
-(def formats
-  "Mapping of two-letter `str` to function taking two floats and returning complex number"
-  {:RI #(cmplx/complex %1 %2)
-  ;;  :MA #(cmplx/complex %1 %2)
-  ;;  :DB #(cmplx/complex %1 %2)
-   })
+(defparser parser (embed-resource "rf_cljs/network/touchstone_grammar.ebnf"))
 
-(defn read
-  "Takes a string `file-contents` and outputs a network map with the following members:
-   {
-      :format <`str` representing how the two columns of floating point numbers are to be 
-              combined to make one complex number>
-      :param <`char` representing the type of parameter read>
-      :data <n-freqs x n-ports x n-ports x 2 mathjs/matrix>
-      :f <n-nfreqs
+(def foo "! This is a comment")
 
-   }"
-  [file-contents]
-  file-contents)
+(parser foo)
