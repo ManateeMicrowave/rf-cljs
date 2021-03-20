@@ -1,4 +1,5 @@
 (ns rf-cljs.math.complex
+  (:refer-clojure :exclude [number?])
   (:require
    ["mathjs" :as mathjs]))
 
@@ -7,8 +8,21 @@
   [re im]
   (mathjs/Complex (str re "+" im "i")))
 
-(defn complex? [c]
+(defn complex?
+  "Test for number that is strictly complex"
+  [c]
   (= "Complex" (. c -type)))
+
+(defn real?
+  "Test for number that is strictly real"
+  [c]
+  (cljs.core/number? c))
+
+(defn number?
+  "Test for a number type (complex or real)"
+  [c]
+  (or (real? c)
+      (complex? c)))
 
 (defn argument
   "Computes the argument of a complex value `x`
@@ -44,3 +58,8 @@
   "Generates a random complex number with optional `max` argument"
   ([] (complex (rand) (rand)))
   ([max] (complex (rand max) (rand max))))
+
+(extend-protocol IPrintWithWriter
+  mathjs/Complex
+  (-pr-writer [c writer _]
+    (write-all writer (str "#Complex[" (real c) " + " (imaginary c) "i]"))))

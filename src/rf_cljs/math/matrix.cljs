@@ -94,7 +94,7 @@
   (->clj (. m toArray)))
 
 (defn squeeze
-  "Removes extra singular dimensions
+  "Removes extra singular dimensions from the first and last dimension
   `(squeeze (matrix [[[1]]]))` = `(matrix [1])`"
   [m]
   (mathjs/squeeze m))
