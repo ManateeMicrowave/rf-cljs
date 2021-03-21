@@ -25,12 +25,12 @@ Version2 =
 
 Version = <"[Version] 2.0"> <Comment?> <newline>
 
-OptionLine = <hash> (Option | <space>)* <Comment?> <newline>
-<Option> = FrequencyUnit | Parameter | Format | OptionReference
-FrequencyUnit = "Hz" | "kHz" | "MHz" | "GHz"
-Parameter = "S" | "Y" | "Z" | "G" | "H"
-Format = "DB" | "MA" | "RI"
-OptionReference = <"R"> <space> positiveFloatingPoint
+OptionLine = <hash> <whitespace>* Option* <Comment?> <newline>
+<Option> = FrequencyUnit | Format | Parameter | OptionReference
+FrequencyUnit = (#"(?i)Hz" | #"(?i)kHz" | #"(?i)MHz" | #"(?i)GHz") <whitespace>+
+Parameter = (#"(?i)S" | #"(?i)Y" | #"(?i)Z" | #"(?i)G" | #"(?i)H") <whitespace>+
+Format = (#"(?i)DB" | #"(?i)MA" | #"(?i)RI") <whitespace>+
+OptionReference = <#"(?i)R"> <whitespace>+ positiveFloatingPoint
 
 NumberOfPorts = <"[Number of Ports] "> positiveNonZeroInt <Comment?> <newline>
 
@@ -59,7 +59,6 @@ Data = DataLine+
 <positiveNonZeroInt> = #"(0*[1-9][0-9]*)"
 <positiveFloatingPoint> = #"([0-9]*[.])?[0-9]+"
 <floatingPoint> = #"(-)?([0-9]*[.])?[0-9]+"
-<space> = " "
 <hash> = "#"
 <whitespace> = " " | "\t"
 <newline> = "\n" | "\r" | "\r\n"
