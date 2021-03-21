@@ -6,19 +6,19 @@
 <File> = Version1 | Version2
 
 Version1 =
-<(Comment? newline)*>
+<(CommentLine)*>
 OptionLine
 Data
 <(whitespace | newline)*>
 
 Version2 =
-<(Comment? newline)*> <Version>
-<(Comment? newline)*> OptionLine
-<(Comment? newline)*> NumberOfPorts
+<(CommentLine)*> <Version>
+<(CommentLine)*> OptionLine
+<(CommentLine)*> NumberOfPorts
 (TwoPortDataOrder | NumberOfFrequencies | NumberOfNoiseFrequencies | Reference | MatrixFormat)+
-<(Comment? newline)*> NetworkData
-<(Comment? newline)*> NoiseData?
-<(Comment? newline)*> <End>
+<(CommentLine)*> NetworkData
+<(CommentLine)*> NoiseData?
+<(CommentLine)*> <End>
 <(whitespace | newline)*>
 
 <Comment> = #"!.*"
@@ -50,9 +50,11 @@ NetworkData = <"[Network Data]"> <(whitespace* newline)?> Data
 
 NoiseData = <"[Noise Data]"> <(whitespace* newline)?> Data
 
-DataLine = (<whitespace*> floatingPoint <whitespace*>)+ <Comment?> <newline> | <Comment?> <newline>
+DataLine = (<whitespace*> floatingPoint <whitespace*>)+ <Comment?> <newline>
 
-Data = DataLine+
+<CommentLine> = Comment? newline
+
+Data = (DataLine | <CommentLine>)+
 
 <End> = "[End]" newline
 
