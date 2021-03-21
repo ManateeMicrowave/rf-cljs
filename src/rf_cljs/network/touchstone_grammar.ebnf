@@ -1,6 +1,20 @@
-<File> = Comment | Keyword
+<File> = Comment | OptionLine | Keywords
+
 <Comment> = #"!.*"
 
 <Word> = #"[^\W_]+"
 <KeywordDelim> = " " | "-"
 Keyword = <"["> Word (KeywordDelim Word+)* <"]">
+
+OptionLine = <hash> (Option | <space>)*
+<Option> = FrequencyUnit | Parameter | Format | Reference
+
+FrequencyUnit = "Hz" | "kHz" | "MHz" | "GHz"
+Parameter = "S" | "Y" | "Z" | "G" | "H"
+Format = "DB" | "MA" | "RI"
+Reference = <"R"> <space> floatingPoint
+
+
+<floatingPoint> = #"([0-9]*[.])?[0-9]+"
+<space> = " "
+<hash> = "#"
