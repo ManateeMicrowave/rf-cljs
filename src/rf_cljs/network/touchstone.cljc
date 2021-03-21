@@ -11,19 +11,21 @@
   (when (> (count string) 0)
     (str string "\n")))
 
-(defn preprocess
-  [stream]
-  (apply str
-         (for [l (line-seq stream)]
-           (-> l
-               (str/split #"!")
-               first
-               (or "")
-               (str/replace #"\s+" " ")
-               (str/trim)
-               give-newline))))
+(defn preprocess-line
+  "Process a line to spare the parser the worst parts of the touchstone format."
+  [l]
+  (-> l
+      (str/split #"!")
+      first
+      (or "")
+      (str/replace #"\s+" " ")
+      (str/trim)
+      give-newline))
+
+(defn preprocess-file
+  [file])
 
 (def parse (comp parser preprocess))
 
-(with-open [rdr (io/reader (io/resource "touchstone_test_files/SusMicrostripStub_TLineSim.s4p"))]
+(with-open [rdr (io/reader (io/resource "touchstone_test_files/example_5_v2.s4p"))]
   (parse rdr))
