@@ -3,44 +3,62 @@
     firstLetterLowerCamelCase = terminals used by many nonterminals 
     snake_case = terminals used by one nonterminal, "local" terminals *)
 
-<File> = Comment | Version | OptionLine |
-NumberOfPorts | TwoPortDataOrder | NumberOfFrequencies | NumberOfNoiseFrequencies | Reference |
-MatrixFormat | NetworkData
+<File> = Version1 | Version2
 
-<Comment> = #"!.*"  
+Version1 =
+<(Comment? newline)*>
+OptionLine
+BunchOfFloats
+<(whitespace | newline)*>
 
-Version = <"[Version] 2.0">
+Version2 =
+<(Comment? newline)*> <Version>
+<(Comment? newline)*> OptionLine
+<(Comment? newline)*> NumberOfPorts
+(TwoPortDataOrder | NumberOfFrequencies | NumberOfNoiseFrequencies | Reference | MatrixFormat)+
+<(Comment? newline)*> NetworkData
+<(Comment? newline)*> NoiseData?
+<(Comment? newline)*> <End>
+<(whitespace | newline)*>
 
-OptionLine = <hash> (Option | <space>)*
-<Option> = FrequencyUnit | Parameter | Format | OldReference
+<Comment> = #"!.*"
 
+Version = <"[Version] 2.0"> <Comment?> <newline>
+
+OptionLine = <hash> (Option | <space>)* <Comment?> <newline>
+<Option> = FrequencyUnit | Parameter | Format | OptionReference
 FrequencyUnit = "Hz" | "kHz" | "MHz" | "GHz"
 Parameter = "S" | "Y" | "Z" | "G" | "H"
 Format = "DB" | "MA" | "RI"
-OldReference = <"R"> <space> positiveFloatingPoint
+OptionReference = <"R"> <space> positiveFloatingPoint
 
-NumberOfPorts = <"[Number of Ports] "> positiveNonZeroInt
+NumberOfPorts = <"[Number of Ports] "> positiveNonZeroInt <Comment?> <newline>
 
-TwoPortDataOrder = <"[Two-Port Data Order] "> tpdo_arg
+TwoPortDataOrder = <"[Two-Port Data Order] "> tpdo_arg <Comment?> <newline>
 <tpdo_arg> = "12_21" | "21_12"
 
-NumberOfFrequencies = <"[Number of Frequencies] "> positiveNonZeroInt
+NumberOfFrequencies = <"[Number of Frequencies] "> positiveNonZeroInt <Comment?> <newline>
 
-NumberOfNoiseFrequencies = <"[Number of Noise Frequencies] "> positiveNonZeroInt
+NumberOfNoiseFrequencies = <"[Number of Noise Frequencies] "> positiveNonZeroInt <Comment?> <newline>
 
 Reference = <"[Reference]"> <#"\s"?> positiveFloatingPoint <#"\s"?> (positiveFloatingPoint | <#"\s">)+
 
-MatrixFormat = <"[Matrix Format] "> matrix_formats
+MatrixFormat = <"[Matrix Format] "> matrix_formats <Comment?> <newline>
 <matrix_formats> = "Full" | "Lower" | "Upper"
 
-NetworkData = <"[Network Data]"> <#"\s"*> floatingPoint <#"\s"*> (floatingPoint | <#"\s">*)+
+NetworkData = <"[Network Data]"> <(whitespace* newline)?> BunchOfFloats
 
+NoiseData = <"[Noise Data]"> <(whitespace* newline)?> BunchOfFloats
 
+BunchOfFloats = ((<whitespace*> floatingPoint <whitespace*>)+ <Comment?> <newline> | <Comment> <newline>)+
 
+<End> = "[End]" newline
 
-<positiveNonZeroInt> = #"^(0*[1-9][0-9]*)$"
+<positiveNonZeroInt> = #"(0*[1-9][0-9]*)"
 <positiveFloatingPoint> = #"([0-9]*[.])?[0-9]+"
 <floatingPoint> = #"(-)?([0-9]*[.])?[0-9]+"
 <space> = " "
 <hash> = "#"
+<whitespace> = " " | "\t"
+<newline> = "\n" | "\r" | "\r\n"
 
