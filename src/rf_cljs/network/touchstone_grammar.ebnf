@@ -1,17 +1,46 @@
-<File> = Comment | Version | OptionLine
+(* Non/terminal naming conventions:
+    FirstLetterCapitalCamelCase = nonterminals 
+    firstLetterLowerCamelCase = terminals used by many nonterminals 
+    snake_case = terminals used by one nonterminal, "local" terminals *)
+
+<File> = Comment | Version | OptionLine |
+NumberOfPorts | TwoPortDataOrder | NumberOfFrequencies | NumberOfNoiseFrequencies | Reference |
+MatrixFormat | NetworkData
 
 <Comment> = #"!.*"  
 
 Version = <"[Version] 2.0">
 
 OptionLine = <hash> (Option | <space>)*
-<Option> = FrequencyUnit | Parameter | Format | Reference
+<Option> = FrequencyUnit | Parameter | Format | OldReference
 
 FrequencyUnit = "Hz" | "kHz" | "MHz" | "GHz"
 Parameter = "S" | "Y" | "Z" | "G" | "H"
 Format = "DB" | "MA" | "RI"
-Reference = <"R"> <space> floatingPoint
+OldReference = <"R"> <space> positiveFloatingPoint
 
-<floatingPoint> = #"([0-9]*[.])?[0-9]+"
+NumberOfPorts = <"[Number of Ports] "> positiveNonZeroInt
+
+TwoPortDataOrder = <"[Two-Port Data Order] "> tpdo_arg
+<tpdo_arg> = "12_21" | "21_12"
+
+NumberOfFrequencies = <"[Number of Frequencies] "> positiveNonZeroInt
+
+NumberOfNoiseFrequencies = <"[Number of Noise Frequencies] "> positiveNonZeroInt
+
+Reference = <"[Reference]"> <#"\s"?> positiveFloatingPoint <#"\s"?> (positiveFloatingPoint | <#"\s">)+
+
+MatrixFormat = <"[Matrix Format] "> matrix_formats
+<matrix_formats> = "Full" | "Lower" | "Upper"
+
+NetworkData = <"[Network Data]"> <#"\s"*> floatingPoint <#"\s"*> (floatingPoint | <#"\s">*)+
+
+
+
+
+<positiveNonZeroInt> = #"^(0*[1-9][0-9]*)$"
+<positiveFloatingPoint> = #"([0-9]*[.])?[0-9]+"
+<floatingPoint> = #"(-)?([0-9]*[.])?[0-9]+"
 <space> = " "
 <hash> = "#"
+
