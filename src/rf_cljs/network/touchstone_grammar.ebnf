@@ -6,62 +6,62 @@
 <File> = Version1 | Version2
 
 Version1 =
-<(CommentLine)*>
 OptionLine
-Data
-<(whitespace | newline)*>
+FrequencyPoint+
+<newline>?
 
 Version2 =
-<(CommentLine)*> <Version>
-<(CommentLine)*> OptionLine
-<(CommentLine)*> NumberOfPorts
+ <Version>
+ OptionLine
+ NumberOfPorts
 (TwoPortDataOrder | NumberOfFrequencies | NumberOfNoiseFrequencies | Reference | MatrixFormat)+
-<(CommentLine)*> NetworkData
-<(CommentLine)*> NoiseData?
-<(CommentLine)*> <End>
-<(whitespace | newline)*>
+ NetworkData
+ NoiseData?
+ <End>
+ <newline>?
 
-<Comment> = #"!.*"
 
-Version = <"[Version] 2.0"> <Comment?> <newline>
+Version = <"[Version] 2.0">  <newline>
 
-OptionLine = <hash> <whitespace>* Option* <Comment?> <newline>
-<Option> = FrequencyUnit | Format | Parameter | OptionReference
-FrequencyUnit = (#"(?i)Hz" | #"(?i)kHz" | #"(?i)MHz" | #"(?i)GHz") <whitespace>+
-Parameter = (#"(?i)S" | #"(?i)Y" | #"(?i)Z" | #"(?i)G" | #"(?i)H") <whitespace>+
-Format = (#"(?i)DB" | #"(?i)MA" | #"(?i)RI") <whitespace>+
-OptionReference = <#"(?i)R"> <whitespace>+ positiveFloatingPoint
+OptionLine = <hash> Option*  <newline>
+<Option> = <space> (FrequencyUnit | Format | Parameter | OptionReference)
+FrequencyUnit = (#"(?i)Hz" | #"(?i)kHz" | #"(?i)MHz" | #"(?i)GHz")
+Parameter = (#"(?i)S" | #"(?i)Y" | #"(?i)Z" | #"(?i)G" | #"(?i)H")
+Format = (#"(?i)DB" | #"(?i)MA" | #"(?i)RI")
+OptionReference = <#"(?i)R"> <space> positiveFloatingPoint
 
-NumberOfPorts = <"[Number of Ports] "> positiveNonZeroInt <Comment?> <newline>
+NumberOfPorts = <"[Number of Ports] "> positiveNonZeroInt  <newline>
 
-TwoPortDataOrder = <"[Two-Port Data Order] "> tpdo_arg <Comment?> <newline>
+TwoPortDataOrder = <"[Two-Port Data Order] "> tpdo_arg  <newline>
 <tpdo_arg> = "12_21" | "21_12"
 
-NumberOfFrequencies = <"[Number of Frequencies] "> positiveNonZeroInt <Comment?> <newline>
+NumberOfFrequencies = <"[Number of Frequencies] "> positiveNonZeroInt  <newline>
 
-NumberOfNoiseFrequencies = <"[Number of Noise Frequencies] "> positiveNonZeroInt <Comment?> <newline>
+NumberOfNoiseFrequencies = <"[Number of Noise Frequencies] "> positiveNonZeroInt  <newline>
 
 Reference = <"[Reference]"> <#"\s"?> positiveFloatingPoint <#"\s"?> (positiveFloatingPoint | <#"\s">)+
 
-MatrixFormat = <"[Matrix Format] "> matrix_formats <Comment?> <newline>
+MatrixFormat = <"[Matrix Format] "> matrix_formats  <newline>
 <matrix_formats> = "Full" | "Lower" | "Upper"
 
-NetworkData = <"[Network Data]"> <(whitespace* newline)?> Data
+NetworkData = <"[Network Data]"> <newline> FrequencyPoint+
 
-NoiseData = <"[Noise Data]"> <(whitespace* newline)?> Data
+NoiseData = <"[Noise Data]"> <newline> FrequencyPoint+
 
-DataLine = (<whitespace*> floatingPoint <whitespace*>)+ <Comment?> <newline>
 
-<CommentLine> = Comment? newline
+FrequencyPoint =  OddDataLine EvenDataLine*
 
-Data = (DataLine | <CommentLine>)+
+(* Elijah! *)
+<EvenData> = floatingPoint <space> floatingPoint (<space> EvenData)?
+OddDataLine = floatingPoint <space> EvenData <newline>
+EvenDataLine =  EvenData <newline>
 
 <End> = "[End]" newline
 
 <positiveNonZeroInt> = #"(0*[1-9][0-9]*)"
-<positiveFloatingPoint> = #"([0-9]*[.])?[0-9]+"
-<floatingPoint> = #"(-)?([0-9]*[.])?[0-9]+"
+<positiveFloatingPoint> = #"[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?"
+<floatingPoint> = #"[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?"
 <hash> = "#"
-<whitespace> = " " | "\t"
+<space> = " "
 <newline> = "\n" | "\r" | "\r\n"
 
