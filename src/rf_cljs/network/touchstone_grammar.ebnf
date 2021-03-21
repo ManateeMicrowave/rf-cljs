@@ -1,1 +1,8 @@
-Comment := #"!.*"
+<Comment> = #"!.*"
+
+Alpha = #"[a-zA-Z]"
+Numeric = #"[0-9]"
+AlphaNumeric = Alpha | Numeric
+KeywordSpace = #"[ -]"
+Keyword = Alphanumeric+ (KeywordSpace AlphaNumeric+)*
+<KeywordNode> = #"\[" Keyword #"\]"
