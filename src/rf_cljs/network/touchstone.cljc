@@ -4,6 +4,6 @@
 
 (def parser (insta/parser (embed-resource "rf_cljs/network/touchstone_grammar.ebnf")))
 
-(def v1 (embed-resource "touchstone_test_files/example_9_v1.s1p"))
+(def v1 (embed-resource "touchstone_test_files/example_10_v2.s1p"))
 
 (parser v1)

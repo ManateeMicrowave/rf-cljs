@@ -8,7 +8,7 @@
 Version1 =
 <(Comment? newline)*>
 OptionLine
-BunchOfFloats
+Data
 <(whitespace | newline)*>
 
 Version2 =
@@ -46,11 +46,13 @@ Reference = <"[Reference]"> <#"\s"?> positiveFloatingPoint <#"\s"?> (positiveFlo
 MatrixFormat = <"[Matrix Format] "> matrix_formats <Comment?> <newline>
 <matrix_formats> = "Full" | "Lower" | "Upper"
 
-NetworkData = <"[Network Data]"> <(whitespace* newline)?> BunchOfFloats
+NetworkData = <"[Network Data]"> <(whitespace* newline)?> Data
 
-NoiseData = <"[Noise Data]"> <(whitespace* newline)?> BunchOfFloats
+NoiseData = <"[Noise Data]"> <(whitespace* newline)?> Data
 
-BunchOfFloats = ((<whitespace*> floatingPoint <whitespace*>)+ <Comment?> <newline> | <Comment> <newline>)+
+DataLine = (<whitespace*> floatingPoint <whitespace*>)+ <Comment?> <newline> | <Comment?> <newline>
+
+Data = DataLine+
 
 <End> = "[End]" newline
 
