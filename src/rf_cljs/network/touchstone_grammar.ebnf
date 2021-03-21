@@ -1,8 +1,6 @@
+<File> = Comment | Keyword
 <Comment> = #"!.*"
 
-Alpha = #"[a-zA-Z]"
-Numeric = #"[0-9]"
-AlphaNumeric = Alpha | Numeric
-KeywordSpace = #"[ -]"
-Keyword = Alphanumeric+ (KeywordSpace AlphaNumeric+)*
-<KeywordNode> = #"\[" Keyword #"\]"
+<Word> = #"[^\W_]+"
+<KeywordDelim> = " " | "-"
+Keyword = <"["> Word (KeywordDelim Word+)* <"]">
