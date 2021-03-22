@@ -14,7 +14,7 @@ yarn-error.log*
 .shadow-cljs/
 .clj-kondo/.cache/
 target/
-
+public/js/
 # lisp language server file
 .lsp/ 
 

@@ -1,9 +1,13 @@
 (ns rf-cljs.core
   (:require
    [clojure.spec.alpha :as s]
-   [clojure.edn :as edn]
+   [reagent.core :as r]
+   [reagent.dom :as rdom]
    [rf-cljs.math.matrix :as mat]
-   [rf-cljs.math.complex :as cplx]))
+   [rf-cljs.math.complex :as cplx]
+   [rf-cljs.misc.fileio :as io]
+   [clojure.core.async :as a]
+   [rf-cljs.network.touchstone :as touchstone]))
 
 ;; On its own, an s matrix must be square
 (s/def ::s (s/and mat/matrix?
@@ -40,3 +44,19 @@
 (s/conform ::network {::s (mat/random-complex [3 2 2])
                       ::z0 [50 (cplx/complex 1 1)]
                       ::freq [1 2 3]})
+
+(defn print-parse [file]
+  (a/go
+    (let [parse-result (a/<! (touchstone/<parse file))]
+      (println parse-result))))
+
+(defn app []
+  [:div
+   [:input {:type :file
+            :id :file-input
+            :on-change #(print-parse (first (.-files (.-target %))))}]])
+
+(defn ^:export main []
+  (rdom/render [app] (.getElementById js/document "app")))
+
+(main)
