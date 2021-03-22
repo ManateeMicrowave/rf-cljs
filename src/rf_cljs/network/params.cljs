@@ -194,13 +194,26 @@
   (-fix-z0-and-broadcast (:to (to -param-fn)) data z0))
 
 (defn convert [input]
+  "Converts a [[mathjs/matrix]] having dimensions n-freqs x n-ports x n-ports  
+   containing [[mathjs/complex]] numbers representing the response of a network
+   from one parameter representation to another.
+   Arguments:
+   - `input`, a map with the following keys:
+       - `:data` : [[mathjs/matrix]] having dimensions n-freqs x n-ports x n-ports  
+                     containing [[mathjs/complex]].
+       - `:from` : The current parameters represented by `(:data input)`.
+       - `:to`   : The desired parameter representation of the network
+                     represented by `(:data input)` to be returned.
+       - `:z0`   : A vector with n-ports `(mathjs/complex)` entries, or
+                     a single scalar representing the impedance of all ports.   
+   "
   (if (= (:from input) (:to input))
     (:data input)
     (from-s (assoc input :data (to-s input)))))
 
 (defn renormalize
-  "Takes `s` an NxMxM matrix of s-parameters referenced to 
-   `z0-current`, and returns a NxMxM matrix of s-parameters
-   referenced to `z0-desired`."
+  "Takes `s`, a [[mathjs/matrix]] having dimensions n-freqs x n-ports x n-ports 
+   containing s-parameters referenced to `z0-current`, and returns a NxMxM matrix of 
+   s-parameters referenced to `z0-desired`."
   [s z0-current z0-desired]
   (to-s {:from :z :data (from-s {:to :z :data s :z0 z0-current}) :z0 z0-desired}))

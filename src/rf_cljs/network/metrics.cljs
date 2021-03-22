@@ -17,7 +17,11 @@
 
 (defn reciprocal? [])
 
-(defn -per-f [f m]
+(defn -per-f
+  "Takes a function `f` and applies it to matrix `m`. In the case that `m` has
+   two dimensions, `f` is applied to `m`. In the case that `m` has 3 dimensions,
+   `f` is applied to each 2-dimensional entry in `m` using [[mat/broadcast]]"
+  [f m]
   (case (count (mat/shape m))
     2 (f m)
     3 (mat/broadcast m f 0)))
