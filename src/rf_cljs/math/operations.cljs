@@ -3,6 +3,8 @@
   (:require
    ["mathjs" :as mathjs]))
 
+(def default-eps 1e-10)
+
 (defn *
   ([] 1)
   ([x] x)
@@ -208,3 +210,19 @@
 
 (defn tanh [x]
   (mathjs/tanh x))
+
+(defn approx
+  "Determines if floats `x` and `y` are within `eps` of one another"
+  ([x y] (approx x y default-eps))
+  ([x y eps]
+   (< (abs (- x y)) eps)))
+
+(defn lt-approx
+  ([x y] (lt-approx x y default-eps))
+  ([x y eps]
+   (or (approx x y eps) (< x y))))
+
+(defn gt-approx
+  ([x y] (gt-approx x y default-eps))
+  ([x y eps]
+   (or (approx x y eps) (> x y))))
