@@ -132,3 +132,6 @@
 ;;   (for [fname touchstone-file-list]
 ;;     (is (network-equals (touchstone/read (read-file fname) test-network))))) 
 ;;     TODO find place for and implement network-equals
+
+; Interpolation Tests
+(deftest interpolation-linear)
