@@ -18,27 +18,33 @@
     (loop [i-d 0 ;Index of the desired frequency that we are going to interpolate on
            i-c 0 ;Index of the `from` frequency range. 
            s-output []]
-      (if-not (= i-d n-desired-freqs)
+      (if (= i-d n-desired-freqs)
       ; If we haven't gone past the number of desired frequencies
+
+        {:s s-output
+         :freq desired-freq
+         :z0 (:z0 net)}
+
         (let [f-des (nth desired-freq i-d)
               f-lo (nth freq i-c)
               f-hi (nth  freq (inc i-c))]
+
           (if-not (and (op/lt-approx f-lo f-des) (op/lt-approx f-des f-hi))
           ; If `f-des` isn't in between `f-lo` and `f-hi` 
             (recur i-d (inc i-c) s-output)
             ; Select next two `from` points to see if desired is between
-            ((let [ratio (/ (- f-des f-lo) (- f-hi f-lo))
-                   s-vec-lo (params/-destructure-two-port (mat/idx s i-c))
-                   s-vec-hi (params/-destructure-two-port (mat/idx s (inc i-c)))
-                   s-interp (mat/reshape (mat/matrix  (apply #(+ (* ratio %1) (* (- 1 ratio) %2)) (map vector s-vec-lo s-vec-hi))) [2 2])]
-               (recur (inc i-d) i-c (conj s-output s-interp))
+            (let [ratio (/ (- f-des f-lo) (- f-hi f-lo))
+                  s-vec-lo (params/-destructure-two-port (mat/idx s i-c))
+                  s-vec-hi (params/-destructure-two-port (mat/idx s (inc i-c)))
+                  s-interp (mat/reshape (mat/matrix  (apply #(+ (* ratio %1) (* (- 1 ratio) %2)) (map vector s-vec-lo s-vec-hi))) [2 2])]
+              (recur (inc i-d) i-c (conj s-output s-interp))
                ; Use ratio to linearily interpolate between real and complex parts 
                ; of each s parameter in nth matrix
-               ))))
-        {:s s-output
-         :freq desired-freq
-         :z0 (:z0 net)}))))
+              )))))))
          ; Exit condition, return hopefully completed interpolated net map
+
+(if true (def a 5) (def a 6))
+a
 
 (defn -interp-to-s-cubic
   [net desired-freq] ; TODO implement 
