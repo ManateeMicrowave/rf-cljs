@@ -4,6 +4,7 @@
   (:require
    [cljs.test :refer-macros [deftest is testing]]
    [rf-cljs.math.operations :refer [+ - * / abs sqrt < > <= >=]]
+   [rf-cljs.network.core :as net]
    [rf-cljs.network.params :as params]
    [rf-cljs.network.params :as touchstone]
    [rf-cljs.math.complex :as cplx]
@@ -134,4 +135,35 @@
 ;;     TODO find place for and implement network-equals
 
 ; Interpolation Tests
-(deftest interpolation-linear)
+
+;Constants used for testing
+(def interp-from
+  {:s (mat/matrix [[[(cplx/complex 0 0) (cplx/complex 0 0)]
+                    [(cplx/complex 0 0) (cplx/complex 0 0)]]
+                   [[(cplx/complex 3 3) (cplx/complex 3 3)]
+                    [(cplx/complex 3 3) (cplx/complex 3 3)]]
+                   [[(cplx/complex 9 9) (cplx/complex 9 9)]
+                    [(cplx/complex 9 9) (cplx/complex 9 9)]]])
+   :freq [0 3 6]
+   :z0 [50 50]})
+(def interp-desired-freq
+  [2 4])
+
+(def interp-linear-output
+  (mat/matrix [[[(cplx/complex 2 2) (cplx/complex 2 2)]
+                [(cplx/complex 2 2) (cplx/complex 2 2)]]
+               [[(cplx/complex 5 5) (cplx/complex 5 5)]
+                [(cplx/complex 5 5) (cplx/complex 5 5)]]]))
+
+;; (def -interp-linear-output
+;;   (mat/matrix [[[(cplx/complex 2 2) (cplx/complex 2 2)]
+;;                 [(cplx/complex 2 2) (cplx/complex 2 2)]]
+;;                [[(cplx/complex 5 5) (cplx/complex 5 5)]
+;;                 [(cplx/complex 5 5) (cplx/complex 5 5)]]]))
+
+(deftest interp-linear
+  "Test net/-interp-linear"
+  (let [should-be interp-linear-output
+        func-output (net/-interp-linear interp-from interp-desired-freq)]
+    (testing (str "Equality between:\nDesired output: " should-be "\nFunction output: " func-output)
+      (is (mat/equals should-be func-output eps)))))
